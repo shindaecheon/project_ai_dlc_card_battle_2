@@ -2902,6 +2902,9 @@
                 updateUIMultiplayer();
                 renderPlayerHand();
 
+                // 배팅 버튼 초기화
+                updateBettingButtons(0);
+
                 if (myTurn) {
                     showAbilityNotice('당신의 차례입니다! 배팅을 선택하세요.', 'info');
                 } else {
@@ -2920,7 +2923,12 @@
                 console.log('[Client] ✅ opponent:bet 수신:', data.betAmount);
                 opponentBet = data.betAmount;
                 myTurn = true;
-                showAbilityNotice(`상대가 ${data.betAmount}G 배팅! 당신의 차례입니다.`, 'info');
+
+                // 배팅 버튼 업데이트 (상대 금액 이상만 표시)
+                updateBettingButtons(data.betAmount);
+
+                // 상대 배팅 금액 숨김 - 긴장감 유지
+                showAbilityNotice(`상대가 배팅했습니다! 당신의 차례입니다.`, 'info');
             });
 
             // 배팅 완료
@@ -2932,6 +2940,10 @@
                 currentBet = data.playerBet;
                 opponentBet = data.opponentBet;
                 console.log('[Client] 활성화 완료 - isPlaying:', isPlaying, 'betSelected:', betSelected);
+
+                // 카드 다시 렌더링 (클릭 가능하게)
+                renderPlayerHand();
+
                 alert(`✅ 배팅 완료!\n내: ${data.playerBet}G\n상대: ${data.opponentBet}G\n\n카드를 선택하세요!`);
                 showAbilityNotice(`배팅 완료! (내: ${data.playerBet}G vs 상대: ${data.opponentBet}G) 카드를 선택하세요!`, 'info');
             });
@@ -3012,6 +3024,10 @@
                 setTimeout(() => {
                     isPlaying = false;
                     renderPlayerHand();
+
+                    // 배팅 버튼 초기화
+                    updateBettingButtons(0);
+
                     showAbilityNotice('새 턴 시작! 배팅을 선택하세요.', 'info');
                 }, 2500);
             });
@@ -3095,6 +3111,33 @@
             gameOverDiv.style.display = 'flex';
             isMultiplayerMode = false;
             currentGameId = null;
+        }
+
+        function updateBettingButtons(minBet) {
+            const betArea = document.querySelector('.bet-area');
+            const betLabel = betArea.querySelector('.bet-label');
+
+            // 기존 버튼 제거
+            betArea.querySelectorAll('.bet-btn').forEach(btn => btn.remove());
+
+            // 최소 배팅 이상의 버튼만 생성
+            const amounts = [50, 100, 150, 200, 250, 300];
+            const validAmounts = amounts.filter(amt => amt >= minBet && amt <= playerGold);
+
+            if (validAmounts.length === 0) {
+                // 골드 부족
+                betLabel.textContent = `배팅 불가 (최소 ${minBet}G 필요)`;
+            } else {
+                betLabel.textContent = `최소 ${minBet}G:`;
+                validAmounts.forEach(amount => {
+                    const btn = document.createElement('button');
+                    btn.className = 'bet-btn';
+                    btn.dataset.bet = amount;
+                    btn.textContent = amount + 'G';
+                    btn.onclick = () => selectBet(amount);
+                    betArea.appendChild(btn);
+                });
+            }
         }
 
         function updateUIMultiplayer() {
