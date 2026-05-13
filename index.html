@@ -2848,6 +2848,7 @@
         let opponentBet = 0;
         let myTurn = false;
         let myPlayerNumber = 0; // 1 또는 2
+        let cardSubmitted = false; // 카드 제출 완료 플래그
 
         // 게임 상태 메시지 표시 함수
         function showGameStatus(message, type = 'info') {
@@ -2933,6 +2934,7 @@
                 opponentGold = data.gold;
                 turn = 1;
                 betSelected = false;
+                cardSubmitted = false; // 게임 시작 시 초기화
                 currentBet = 0;
                 opponentBet = 0;
                 isPlaying = false; // 배팅 먼저 해야 함
@@ -2976,10 +2978,11 @@
 
                 betSelected = true;
                 isPlaying = true;
+                cardSubmitted = false; // 새 라운드 시작 - 카드 제출 플래그 초기화
                 currentBet = data.playerBet;
                 opponentBet = data.opponentBet;
 
-                console.log('[Client] 활성화 완료 - isPlaying:', isPlaying, 'betSelected:', betSelected);
+                console.log('[Client] 활성화 완료 - isPlaying:', isPlaying, 'betSelected:', betSelected, 'cardSubmitted:', cardSubmitted);
                 console.log('[Client] renderPlayerHand 호출 전');
 
                 // 카드 다시 렌더링 (클릭 가능하게)
@@ -3084,6 +3087,7 @@
 
                 // 배팅 초기화
                 betSelected = false;
+                cardSubmitted = false; // 다음 턴 준비 - 카드 제출 플래그 초기화
                 currentBet = 0;
                 opponentBet = 0;
                 myTurn = true; // 다음 턴 플레이어1부터 시작
@@ -3155,9 +3159,14 @@
         }
 
         function playCardMultiplayer(index) {
-            if (!isPlaying || !currentGameId) return;
+            if (!isPlaying || !currentGameId || cardSubmitted) {
+                console.log('[playCardMultiplayer] 차단됨 - isPlaying:', isPlaying, 'cardSubmitted:', cardSubmitted);
+                return;
+            }
 
-            isPlaying = false;
+            // 카드 제출 플래그 설정 (중복 제출 방지)
+            cardSubmitted = true;
+            console.log('[playCardMultiplayer] 카드 제출 플래그 설정');
 
             // 카드 제출 상태 표시
             showGameStatus('🎴 카드 제출 중...', 'info');
