@@ -1709,7 +1709,7 @@
             { id: 'shield', icon: '🛡️', name: '보호 방패', desc: '이번 턴 패배해도 HP 손실 없음', cost: 150 },
             { id: 'potion', icon: '🧪', name: '회복 물약', desc: '즉시 200G 회복', cost: 100 },
             { id: 'needle', icon: '🗡️', name: '독 바늘', desc: '이번 턴 승리 시 배당금 2배 획득', cost: 150 },
-            { id: 'crystal', icon: '🔮', name: '수정 구슬', desc: 'AI의 다음 카드를 미리 확인', cost: 100 },
+            { id: 'crystal', icon: '🔮', name: '수정 구슬', desc: '상대 패 중 가장 높은 카드 확인', cost: 100 },
             { id: 'swap', icon: '🔄', name: '교체 카드', desc: '손패 1장을 버리고 새로 1장 드로우', cost: 150 },
             { id: 'coin', icon: '🎲', name: '도박꾼의 주화', desc: '이번 턴 배당금 3배 (승패 모두)', cost: 150 },
             { id: 'allin', icon: '💀', name: '올인', desc: '이번 턴 소지금 전액 베팅 (승리 시 2배, 패배 시 파산)', cost: 0 },
@@ -2093,21 +2093,19 @@
                 if (aiHand.length === 0) return;
                 playerGold -= item.cost;
                 usedItems.push(item.id);
-                const randomAiCard = aiHand[Math.floor(Math.random() * aiHand.length)];
+                const highest = [...aiHand].sort((a, b) => b.value - a.value)[0];
                 const peekOverlay = document.getElementById('peek-overlay');
                 const peekCard = document.getElementById('peek-card');
-                const colorClass = SUIT_COLORS[randomAiCard.suit];
+                const colorClass = SUIT_COLORS[highest.suit];
                 peekCard.className = `peek-card ${colorClass}`;
-                peekCard.innerHTML = `${randomAiCard.suit} ${randomAiCard.rank}`;
+                peekCard.innerHTML = `${highest.suit} ${highest.rank}`;
                 document.querySelector('#peek-overlay h2').textContent = '🔮 수정 구슬 발동!';
-                document.querySelector('#peek-overlay p:first-of-type').textContent = 'AI 패에 있는 카드:';
+                document.querySelector('#peek-overlay p:first-of-type').textContent = '상대 패 중 가장 높은 카드:';
                 peekOverlay.style.display = 'flex';
                 setTimeout(() => {
                     peekOverlay.style.display = 'none';
-                    document.querySelector('#peek-overlay h2').textContent = '♠J 엿보기 발동!';
-                    document.querySelector('#peek-overlay p:first-of-type').textContent = 'AI가 낼 카드:';
                 }, 2500);
-                document.getElementById('item-active-notice').textContent = '🔮 AI 패 확인!';
+                document.getElementById('item-active-notice').textContent = '🔮 상대 최강 카드 확인!';
                 renderItems();
                 return;
             }
