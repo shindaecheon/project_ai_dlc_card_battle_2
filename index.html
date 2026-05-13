@@ -600,7 +600,7 @@
         const SUIT_PRIORITY_REVERSED = { '♠': 1, '♦': 2, '♥': 3, '♣': 4 };
 
         const ABILITIES = {
-            '♠J': { name: '엿보기', desc: 'AI 카드 미리 확인' },
+            '♠J': { name: '압박', desc: 'AI 최약 카드 강제 출전' },
             '♠Q': { name: '증폭', desc: '승리 시 배당금 2배' },
             '♠K': { name: '압도', desc: '무조건 승리' },
             '♦J': { name: '도둑', desc: '승리 시 1.5배' },
@@ -662,13 +662,31 @@
             return array;
         }
 
+        function dealHand() {
+            const deck = createDeck();
+            const specials = shuffle(deck.filter(c => ['J', 'Q', 'K'].includes(c.rank)));
+            const normals = shuffle(deck.filter(c => !['J', 'Q', 'K'].includes(c.rank)));
+
+            const playerSpecials = specials.slice(0, 3);
+            const aiSpecials = specials.slice(3, 6);
+            const playerNormals = normals.slice(0, 7);
+            const aiNormals = normals.slice(7, 14);
+            const remaining = normals.slice(14);
+
+            return {
+                player: shuffle([...playerSpecials, ...playerNormals]),
+                ai: shuffle([...aiSpecials, ...aiNormals]),
+                remaining: remaining
+            };
+        }
+
         function startGame() {
             document.getElementById('game-over').style.display = 'none';
             document.getElementById('peek-overlay').style.display = 'none';
-            const deck = shuffle(createDeck());
-            playerHand = deck.slice(0, 10);
-            aiHand = deck.slice(10, 20);
-            remainingDeck = deck.slice(20);
+            const hands = dealHand();
+            playerHand = hands.player;
+            aiHand = hands.ai;
+            remainingDeck = hands.remaining;
             playerGold = 1000;
             aiGold = 1000;
             turn = 1;
@@ -962,28 +980,10 @@
             }
 
             if (ability && playerCard.suit === '♠' && playerCard.rank === 'J') {
-                const aiIndex = chooseAiCard(playerCard);
-                peekedAiCard = { card: aiHand[aiIndex], index: aiIndex };
-
-                const peekOverlay = document.getElementById('peek-overlay');
-                const peekCard = document.getElementById('peek-card');
-                const colorClass = SUIT_COLORS[peekedAiCard.card.suit];
-                peekCard.className = `peek-card ${colorClass}`;
-                peekCard.innerHTML = `${peekedAiCard.card.suit} ${peekedAiCard.card.rank}`;
-                peekOverlay.style.display = 'flex';
-
-                peekMode = true;
-                playerHand.splice(index, 1);
-                renderPlayerHand();
-
-                document.getElementById('hand-label').textContent = 'AI 카드를 확인했습니다! 다른 카드를 선택하거나 기다리세요';
-
-                setTimeout(() => {
-                    peekOverlay.style.display = 'none';
-                    peekMode = false;
-                    resolveCardPlay(playerCard, peekedAiCard.index);
-                }, 2500);
-                return;
+                const sorted = aiHand
+                    .map((card, i) => ({ card, i }))
+                    .sort((a, b) => a.card.value - b.card.value);
+                forcedAiIndex = sorted[0].i;
             }
 
             isPlaying = false;
