@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>카드 배틀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,33 +12,59 @@
             box-sizing: border-box;
         }
 
+        /* 스크롤바 스타일링 (필요시) */
+        .game-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .game-container::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+
+        .game-container::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+
+        .game-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: #1a5c2a;
-            min-height: 100vh;
+            background: #173A3B;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: #fff;
+            overflow: hidden;
         }
 
         .game-container {
             width: 100%;
             max-width: 900px;
-            padding: 20px;
+            height: 100vh;
+            max-height: 100vh;
+            padding: 1vh 2vw;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
 
         .status-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 15px 25px;
+            margin-bottom: 1vh;
+            padding: 1vh 2vw;
             background: rgba(0,0,0,0.3);
             border-radius: 12px;
             flex-wrap: wrap;
             gap: 8px;
+            flex-shrink: 0;
         }
 
         .player-status, .ai-status {
@@ -65,10 +92,11 @@
             justify-content: center;
             align-items: center;
             gap: 15px;
-            margin-bottom: 20px;
-            padding: 15px;
+            margin-bottom: 0.5vh;
+            padding: 1vh 2vw;
             background: rgba(0,0,0,0.2);
             border-radius: 12px;
+            flex-shrink: 0;
         }
 
         .bet-label {
@@ -107,11 +135,12 @@
             justify-content: center;
             align-items: center;
             gap: 60px;
-            min-height: 220px;
-            margin-bottom: 30px;
-            padding: 20px;
+            min-height: 20vh;
+            margin-bottom: 1vh;
+            padding: 2vh 2vw;
             background: rgba(0,0,0,0.15);
             border-radius: 16px;
+            flex-shrink: 0;
         }
 
         .battle-card {
@@ -124,6 +153,7 @@
             justify-content: center;
             font-size: 1.8rem;
             font-weight: bold;
+            font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
             background: #fff;
             color: #333;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -166,6 +196,48 @@
             box-shadow: none;
         }
 
+        .battle-card.card-back {
+            background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 50%, #2a2a2a 100%);
+            border-radius: 10px;
+        }
+
+        .battle-card.appear {
+            animation: cardAppear 0.5s ease-out;
+        }
+
+        .battle-card.winner {
+            animation: cardWin 0.6s ease-in-out;
+        }
+
+        .battle-card.loser {
+            animation: cardLose 0.6s ease-in-out;
+        }
+
+        .battle-card.flip {
+            animation: cardFlip 0.6s ease-in-out;
+        }
+
+        @keyframes cardAppear {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes cardWin {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); box-shadow: 0 0 20px rgba(76, 175, 80, 0.6); }
+        }
+
+        @keyframes cardLose {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        @keyframes cardFlip {
+            0% { transform: rotateY(0deg); }
+            50% { transform: rotateY(90deg); }
+            100% { transform: rotateY(0deg); }
+        }
+
         .battle-label {
             text-align: center;
         }
@@ -186,10 +258,26 @@
             text-align: center;
             font-size: 1.2rem;
             font-weight: bold;
-            margin-bottom: 20px;
-            min-height: 50px;
+            margin-bottom: 1vh;
+            min-height: 4vh;
             line-height: 1.4;
             padding: 5px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .result-message.show {
+            opacity: 1;
+            transform: translateY(0);
+            animation: resultBounce 0.6s ease-out;
+        }
+
+        @keyframes resultBounce {
+            0% { transform: translateY(-20px); opacity: 0; }
+            60% { transform: translateY(5px); opacity: 1; }
+            100% { transform: translateY(0); }
         }
 
         .result-message.win { color: #4fc3f7; }
@@ -199,23 +287,29 @@
         .hand-area {
             background: rgba(0,0,0,0.2);
             border-radius: 16px;
-            padding: 20px;
+            padding: 1.5vh 2vw;
+            flex-shrink: 0;
         }
 
         .hand-label {
-            font-size: 0.9rem;
+            font-size: 1.1rem;
             margin-bottom: 12px;
-            opacity: 0.7;
+            text-align: center;
+            font-weight: bold;
+            color: #ffd54f;
         }
 
         .hand {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: center;
+            position: relative;
+            height: 16vh;
+            min-height: 120px;
         }
 
         .card {
+            position: absolute;
             width: 80px;
             height: 115px;
             border-radius: 8px;
@@ -226,15 +320,43 @@
             justify-content: center;
             font-size: 1.3rem;
             font-weight: bold;
+            font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 2px solid transparent;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: linear-gradient(45deg, #C0C0C0, #E8E8E8, #C0C0C0);
+            border-radius: 10px;
+            opacity: 0;
+            filter: blur(8px);
+            z-index: -1;
+            transition: opacity 0.3s ease;
         }
 
         .card:hover:not(.disabled) {
-            transform: translateY(-10px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            transform: translateY(-25px) scale(1.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5), 0 0 0 3px rgba(192, 192, 192, 0.6);
+            border-color: #C0C0C0;
+            z-index: 100;
+        }
+
+        .card:hover::before {
+            opacity: 0.7;
+            animation: glowPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.4; }
         }
 
         .card.red { color: #d32f2f; }
@@ -298,7 +420,8 @@
         }
 
         .card.disabled {
-            opacity: 0.5;
+            opacity: 1;
+            filter: grayscale(0.3);
             cursor: not-allowed;
             transform: none !important;
         }
@@ -411,15 +534,17 @@
             text-align: center;
             font-size: 0.9rem;
             color: #ffd54f;
-            margin-bottom: 10px;
-            min-height: 20px;
+            margin-bottom: 0.5vh;
+            min-height: 2vh;
+            flex-shrink: 0;
         }
 
         .sealed-notice {
             color: #ef5350;
             font-size: 0.8rem;
             text-align: center;
-            margin-bottom: 5px;
+            margin-bottom: 0.5vh;
+            flex-shrink: 0;
         }
 
         .item-area {
@@ -579,7 +704,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #1a5c2a, #0d3318);
+            background: linear-gradient(135deg, #173A3B, #0d2526);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -646,17 +771,18 @@
 
         .event-banner {
             text-align: center;
-            padding: 8px 16px;
-            margin-bottom: 10px;
+            padding: 0.8vh 2vw;
+            margin-bottom: 0.5vh;
             border-radius: 8px;
             background: rgba(255, 152, 0, 0.2);
             border: 1px solid #ff9800;
             color: #ff9800;
             font-size: 0.9rem;
             font-weight: bold;
-            min-height: 36px;
+            min-height: 3vh;
             display: none;
             animation: event-flash 0.5s ease;
+            flex-shrink: 0;
         }
 
         .event-banner.active {
@@ -676,7 +802,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(23, 58, 59, 0.95);
             display: none;
             justify-content: center;
             align-items: center;
@@ -690,47 +816,49 @@
         }
 
         .shop-container {
-            background: linear-gradient(135deg, #1a5c2a, #2d7a3e);
+            background: linear-gradient(135deg, #173A3B, #0d2526);
             border-radius: 20px;
-            padding: 30px;
-            max-width: 900px;
-            width: 100%;
+            padding: 21px;
+            max-width: 630px;
+            width: 70%;
             box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
             border: 3px solid #ffd700;
+            transform: scale(0.7);
+            transform-origin: center;
         }
 
         .shop-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 21px;
         }
 
         .shop-header h1 {
-            font-size: 2.5rem;
+            font-size: 1.75rem;
             color: #ffd700;
-            margin-bottom: 10px;
+            margin-bottom: 7px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .shop-header .current-gold {
-            font-size: 1.3rem;
+            font-size: 0.91rem;
             color: #4fc3f7;
             font-weight: bold;
         }
 
         .shop-tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
+            gap: 7px;
+            margin-bottom: 17.5px;
             border-bottom: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         .shop-tab {
-            padding: 12px 25px;
+            padding: 8.4px 17.5px;
             background: rgba(255, 255, 255, 0.1);
             border: none;
             border-radius: 8px 8px 0 0;
             color: #fff;
-            font-size: 1rem;
+            font-size: 0.7rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -755,15 +883,15 @@
 
         .gold-packages {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
         }
 
         .package-card {
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid #ffd700;
             border-radius: 12px;
-            padding: 20px;
+            padding: 14px;
             text-align: center;
             transition: all 0.3s;
             cursor: pointer;
@@ -783,58 +911,58 @@
 
         .package-badge {
             position: absolute;
-            top: -10px;
-            right: -10px;
+            top: -7px;
+            right: -7px;
             background: #ff6b6b;
             color: #fff;
-            padding: 5px 12px;
+            padding: 3.5px 8.4px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.56rem;
             font-weight: bold;
         }
 
         .package-icon {
-            font-size: 3rem;
-            margin-bottom: 10px;
+            font-size: 2.1rem;
+            margin-bottom: 7px;
         }
 
         .package-name {
-            font-size: 1.2rem;
+            font-size: 0.84rem;
             font-weight: bold;
             color: #ffd700;
-            margin-bottom: 10px;
+            margin-bottom: 7px;
         }
 
         .package-gold {
-            font-size: 1.8rem;
+            font-size: 1.26rem;
             font-weight: bold;
             color: #4fc3f7;
-            margin-bottom: 5px;
+            margin-bottom: 3.5px;
         }
 
         .package-bonus {
-            font-size: 0.9rem;
+            font-size: 0.63rem;
             color: #66ff66;
-            margin-bottom: 10px;
+            margin-bottom: 7px;
         }
 
         .package-price {
-            font-size: 1.5rem;
+            font-size: 1.05rem;
             font-weight: bold;
             color: #fff;
             background: rgba(255, 215, 0, 0.2);
-            padding: 8px;
+            padding: 5.6px;
             border-radius: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 10.5px;
         }
 
         .package-buy-btn {
             background: linear-gradient(135deg, #4fc3f7, #29b6f6);
             color: #fff;
             border: none;
-            padding: 12px 25px;
+            padding: 8.4px 17.5px;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.7rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -848,13 +976,13 @@
 
         .shop-close-btn {
             display: block;
-            margin: 30px auto 0;
-            padding: 12px 40px;
+            margin: 21px auto 0;
+            padding: 8.4px 28px;
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
             border: 2px solid #fff;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.7rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -866,49 +994,438 @@
 
         .premium-items {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+            gap: 14px;
         }
 
         .item-card {
             background: rgba(0, 0, 0, 0.3);
             border: 2px solid #9c27b0;
             border-radius: 12px;
-            padding: 20px;
+            padding: 14px;
             text-align: center;
             transition: all 0.3s;
             cursor: pointer;
         }
 
         .item-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(156, 39, 176, 0.4);
+            transform: translateY(-3.5px);
+            box-shadow: 0 7px 21px rgba(156, 39, 176, 0.4);
         }
 
         .item-card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 1.75rem;
+            margin-bottom: 7px;
         }
 
         .item-card-name {
-            font-size: 1.1rem;
+            font-size: 0.77rem;
             font-weight: bold;
             color: #ba68c8;
-            margin-bottom: 8px;
+            margin-bottom: 5.6px;
         }
 
         .item-card-desc {
-            font-size: 0.85rem;
+            font-size: 0.6rem;
             color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 10px;
-            min-height: 40px;
+            margin-bottom: 7px;
+            min-height: 28px;
         }
 
         .item-card-price {
-            font-size: 1.3rem;
+            font-size: 0.91rem;
             font-weight: bold;
             color: #4fc3f7;
-            margin-bottom: 10px;
+            margin-bottom: 7px;
+        }
+
+        /* ==================== 반응형 디자인 ==================== */
+
+        /* 태블릿 (768px 이하) */
+        @media (max-width: 768px) {
+            .game-container {
+                max-width: 100%;
+                padding: 15px;
+            }
+
+            .status-bar {
+                padding: 12px 15px;
+                margin-bottom: 15px;
+            }
+
+            .gold-display {
+                font-size: 1rem;
+            }
+
+            .turn-info {
+                font-size: 0.9rem;
+            }
+
+            .bet-area {
+                gap: 10px;
+                padding: 12px;
+                margin-bottom: 8px;
+            }
+
+            .bet-label {
+                font-size: 0.9rem;
+            }
+
+            .bet-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+
+            .battle-area {
+                gap: 40px;
+                min-height: 180px;
+                margin-bottom: 12px;
+                padding: 15px;
+            }
+
+            .battle-card {
+                width: 100px;
+                height: 140px;
+                font-size: 1.5rem;
+            }
+
+            .battle-card .suit-top,
+            .battle-card .suit-bottom {
+                font-size: 0.8rem;
+            }
+
+            .battle-card .ability-tag {
+                font-size: 0.55rem;
+                bottom: 25px;
+            }
+
+            .result-message {
+                font-size: 1rem;
+                min-height: 40px;
+            }
+
+            .hand-label {
+                font-size: 1rem;
+            }
+
+            .hand {
+                height: 125px;
+            }
+
+            .card {
+                width: 70px;
+                height: 100px;
+                font-size: 1.1rem;
+            }
+
+            .card .card-suit-top,
+            .card .card-suit-bottom {
+                font-size: 0.65rem;
+            }
+
+            .card .card-ability {
+                font-size: 0.45rem;
+                bottom: 12px;
+            }
+
+            .card:hover:not(.disabled) {
+                transform: translateY(-20px) scale(1.08);
+            }
+
+            .item-area {
+                bottom: 15px;
+                right: 15px;
+                padding: 10px;
+                max-width: 200px;
+            }
+
+            .item-slot {
+                width: 55px;
+                height: 55px;
+                font-size: 1.2rem;
+            }
+
+            .mode-btn {
+                width: 180px;
+                padding: 25px 15px;
+            }
+
+            .mode-btn .mode-icon {
+                font-size: 2.5rem;
+            }
+
+            .mode-btn .mode-title {
+                font-size: 1.1rem;
+            }
+
+            .mode-btn .mode-desc {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* 모바일 (480px 이하) */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .game-container {
+                padding: 10px;
+            }
+
+            .status-bar {
+                padding: 10px;
+                margin-bottom: 10px;
+                gap: 5px;
+            }
+
+            .gold-display {
+                font-size: 0.9rem;
+            }
+
+            .turn-info {
+                font-size: 0.8rem;
+            }
+
+            .bet-area {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .bet-label {
+                width: 100%;
+                text-align: center;
+                font-size: 0.85rem;
+            }
+
+            .bet-btn {
+                padding: 7px 12px;
+                font-size: 0.85rem;
+            }
+
+            .battle-area {
+                gap: 30px;
+                min-height: 150px;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .battle-card {
+                width: 85px;
+                height: 120px;
+                font-size: 1.3rem;
+            }
+
+            .battle-card .suit-top,
+            .battle-card .suit-bottom {
+                font-size: 0.7rem;
+            }
+
+            .battle-card .ability-tag {
+                font-size: 0.5rem;
+                bottom: 20px;
+            }
+
+            .vs-text {
+                font-size: 1.5rem;
+            }
+
+            .result-message {
+                font-size: 0.9rem;
+                min-height: 35px;
+                margin-bottom: 15px;
+            }
+
+            .hand-label {
+                font-size: 0.9rem;
+                margin-bottom: 10px;
+            }
+
+            .hand {
+                height: 110px;
+            }
+
+            .card {
+                width: 60px;
+                height: 85px;
+                font-size: 1rem;
+            }
+
+            .card .card-suit-top,
+            .card .card-suit-bottom {
+                font-size: 0.6rem;
+            }
+
+            .card .card-ability {
+                font-size: 0.4rem;
+                bottom: 10px;
+            }
+
+            .card:hover:not(.disabled) {
+                transform: translateY(-15px) scale(1.05);
+            }
+
+            .item-area {
+                bottom: 10px;
+                right: 10px;
+                padding: 8px;
+                max-width: 170px;
+            }
+
+            .item-slot {
+                width: 50px;
+                height: 50px;
+                font-size: 1.1rem;
+            }
+
+            .item-slot .item-cost {
+                font-size: 0.5rem;
+            }
+
+            .ai-emotion .emotion-face {
+                font-size: 2rem;
+            }
+
+            .mode-select-overlay h1 {
+                font-size: 2rem;
+            }
+
+            .mode-select-overlay .subtitle {
+                font-size: 0.9rem;
+            }
+
+            .mode-buttons {
+                gap: 20px;
+            }
+
+            .mode-btn {
+                width: 150px;
+                padding: 20px 12px;
+            }
+
+            .mode-btn .mode-icon {
+                font-size: 2rem;
+            }
+
+            .mode-btn .mode-title {
+                font-size: 1rem;
+            }
+
+            .mode-btn .mode-desc {
+                font-size: 0.7rem;
+            }
+
+            .game-over-overlay h1 {
+                font-size: 2rem;
+            }
+
+            .game-over-overlay button {
+                padding: 12px 30px;
+                font-size: 1rem;
+            }
+        }
+
+        /* 초소형 모바일 (360px 이하) */
+        @media (max-width: 360px) {
+            .bet-btn {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+
+            .battle-area {
+                gap: 20px;
+            }
+
+            .battle-card {
+                width: 75px;
+                height: 105px;
+                font-size: 1.2rem;
+            }
+
+            .card {
+                width: 55px;
+                height: 78px;
+                font-size: 0.95rem;
+            }
+
+            .hand {
+                height: 100px;
+            }
+
+            .item-area {
+                position: fixed;
+                bottom: 5px;
+                right: 5px;
+                max-width: 150px;
+            }
+
+            .item-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
+            }
+
+            .item-slot {
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+
+            .mode-btn {
+                width: 130px;
+                padding: 15px 10px;
+            }
+        }
+
+        /* 가로 모드 (세로보다 가로가 긴 경우) */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .game-container {
+                padding: 10px;
+            }
+
+            .status-bar {
+                margin-bottom: 10px;
+                padding: 10px 15px;
+            }
+
+            .bet-area {
+                margin-bottom: 5px;
+                padding: 10px;
+            }
+
+            .battle-area {
+                min-height: 140px;
+                margin-bottom: 8px;
+                padding: 10px;
+            }
+
+            .battle-card {
+                width: 90px;
+                height: 125px;
+            }
+
+            .result-message {
+                margin-bottom: 10px;
+                min-height: 30px;
+            }
+
+            .hand-area {
+                padding: 10px;
+            }
+
+            .hand {
+                height: 100px;
+            }
+
+            .card {
+                width: 65px;
+                height: 90px;
+            }
+
+            .item-area {
+                bottom: 10px;
+                right: 10px;
+            }
         }
     </style>
 </head>
@@ -1376,6 +1893,39 @@
             const handEl = document.getElementById('player-hand');
             handEl.innerHTML = '';
             const handToShow = (gameMode === 'pvp' && currentPlayer === 2) ? aiHand : playerHand;
+
+            const cardCount = handToShow.length;
+
+            // 반응형 카드 크기 및 오버랩 계산
+            const screenWidth = window.innerWidth;
+            let cardWidth, maxOverlap, containerWidth;
+
+            if (screenWidth <= 360) {
+                // 초소형 모바일
+                cardWidth = 55;
+                maxOverlap = 35;
+                containerWidth = 300;
+            } else if (screenWidth <= 480) {
+                // 모바일
+                cardWidth = 60;
+                maxOverlap = 40;
+                containerWidth = 350;
+            } else if (screenWidth <= 768) {
+                // 태블릿
+                cardWidth = 70;
+                maxOverlap = 45;
+                containerWidth = 450;
+            } else {
+                // 데스크톱
+                cardWidth = 80;
+                maxOverlap = 50;
+                containerWidth = 500;
+            }
+
+            const overlapAmount = cardCount > 1 ? Math.min(maxOverlap, containerWidth / (cardCount - 1)) : 0;
+            const totalWidth = cardWidth + (cardCount - 1) * overlapAmount;
+            const startOffset = -totalWidth / 2 + cardWidth / 2;
+
             handToShow.forEach((card, index) => {
                 const cardEl = document.createElement('div');
                 const colorClass = SUIT_COLORS[card.suit];
@@ -1393,8 +1943,18 @@
                     ${abilityHtml}
                     ${tooltipHtml}
                 `;
+
+                cardEl.style.left = `calc(50% + ${startOffset + index * overlapAmount}px)`;
+                cardEl.style.zIndex = index;
+
                 if (canPlay) {
                     cardEl.addEventListener('click', () => playCard(index));
+                    cardEl.addEventListener('mouseenter', () => {
+                        cardEl.style.zIndex = 1000;
+                    });
+                    cardEl.addEventListener('mouseleave', () => {
+                        cardEl.style.zIndex = index;
+                    });
                 }
                 handEl.appendChild(cardEl);
             });
@@ -1415,8 +1975,8 @@
             const aiBattle = document.getElementById('ai-battle-card');
             playerBattle.className = 'battle-card empty';
             playerBattle.innerHTML = '?';
-            aiBattle.className = 'battle-card empty';
-            aiBattle.innerHTML = '?';
+            aiBattle.className = 'battle-card card-back';
+            aiBattle.innerHTML = '';
         }
 
         function renderBattleCard(element, card) {
@@ -1777,8 +2337,17 @@
             const aiCard = aiHand.splice(aiIndex, 1)[0];
             const aiAbility = getAbility(aiCard);
 
-            renderBattleCard(document.getElementById('player-battle-card'), playerCard);
-            renderBattleCard(document.getElementById('ai-battle-card'), aiCard);
+            const playerBattleEl = document.getElementById('player-battle-card');
+            const aiBattleEl = document.getElementById('ai-battle-card');
+
+            renderBattleCard(playerBattleEl, playerCard);
+
+            setTimeout(() => {
+                aiBattleEl.classList.add('flip');
+                setTimeout(() => {
+                    renderBattleCard(aiBattleEl, aiCard);
+                }, 300);
+            }, 300);
 
             let effectiveBet = currentBet;
             let isFreePlay = false;
@@ -1872,95 +2441,100 @@
                 sealNextTurn = true;
             }
 
-            if (winner === 'player') {
-                let goldEarned = isFreePlay ? 0 : Math.floor(effectiveBet * (doubleDamage ? 2 : 1) * betMultiplier);
-                if (!isFreePlay) {
-                    playerGold += goldEarned;
-                    aiGold -= goldEarned;
-                }
-                if (wildBonus > 0) {
-                    playerGold += wildBonus;
-                }
-
-                aiConsecutiveLosses++;
-                aiConsecutiveWins = 0;
-
-                let msg = `승리!${abilityText}`;
-                if (!isFreePlay && goldEarned > 0) msg += ` | +${goldEarned}G`;
-                if (wildBonus > 0) msg += ` | 황금비 +${wildBonus}G`;
-                if (activeItem === 'coin') msg += ' [주화 3배]';
-                if (activeItem === 'needle') msg += ' [독 바늘 2배]';
-                if (isReversed) msg += ' [역전]';
-                resultEl.textContent = msg;
-                resultEl.className = 'result-message win';
-            } else if (winner === 'ai') {
-                let goldLost = 0;
-                if (!playerProtected && !isFreePlay) {
-                    let loseMultiplier = (currentEvent && currentEvent.id === 'poison') ? 2 : 1;
-                    if (activeItem === 'coin') loseMultiplier = 3;
-                    goldLost = Math.floor(effectiveBet * loseMultiplier);
-
-                    if (ability && ability.name === '반격') {
-                        let refund = Math.floor(goldLost * 0.5);
-                        goldLost -= refund;
+            setTimeout(() => {
+                if (winner === 'player') {
+                    let goldEarned = isFreePlay ? 0 : Math.floor(effectiveBet * (doubleDamage ? 2 : 1) * betMultiplier);
+                    if (!isFreePlay) {
+                        playerGold += goldEarned;
+                        aiGold -= goldEarned;
+                    }
+                    if (wildBonus > 0) {
+                        playerGold += wildBonus;
                     }
 
-                    playerGold -= goldLost;
-                    aiGold += goldLost;
+                    aiConsecutiveLosses++;
+                    aiConsecutiveWins = 0;
+
+                    let msg = `승리!${abilityText}`;
+                    if (!isFreePlay && goldEarned > 0) msg += ` | +${goldEarned}G`;
+                    if (wildBonus > 0) msg += ` | 황금비 +${wildBonus}G`;
+                    if (activeItem === 'coin') msg += ' [주화 3배]';
+                    if (activeItem === 'needle') msg += ' [독 바늘 2배]';
+                    if (isReversed) msg += ' [역전]';
+                    resultEl.textContent = msg;
+                    resultEl.className = 'result-message win';
+                    setTimeout(() => resultEl.classList.add('show'), 50);
+                } else if (winner === 'ai') {
+                    let goldLost = 0;
+                    if (!playerProtected && !isFreePlay) {
+                        let loseMultiplier = (currentEvent && currentEvent.id === 'poison') ? 2 : 1;
+                        if (activeItem === 'coin') loseMultiplier = 3;
+                        goldLost = Math.floor(effectiveBet * loseMultiplier);
+
+                        if (ability && ability.name === '반격') {
+                            let refund = Math.floor(goldLost * 0.5);
+                            goldLost -= refund;
+                        }
+
+                        playerGold -= goldLost;
+                        aiGold += goldLost;
+                    }
+                    if (wildBonus > 0) {
+                        aiGold += wildBonus;
+                    }
+
+                    aiConsecutiveWins++;
+                    aiConsecutiveLosses = 0;
+
+                    let msg = playerProtected
+                        ? `패배!${abilityText} 보호됨! 골드 손실 없음`
+                        : `패배!${abilityText}`;
+                    if (!playerProtected && !isFreePlay) msg += ` | -${goldLost}G`;
+                    if (ability && ability.name === '반격' && !playerProtected) msg += ' [반격 50% 회수]';
+                    if (currentEvent && currentEvent.id === 'poison' && !playerProtected) msg += ' [독안개]';
+                    if (activeItem === 'shield') msg += ' [방패]';
+                    if (activeItem === 'coin') msg += ' [주화 3배]';
+                    if (isReversed) msg += ' [역전]';
+                    resultEl.textContent = msg;
+                    resultEl.className = 'result-message lose';
+                    setTimeout(() => resultEl.classList.add('show'), 50);
+                } else {
+                    aiConsecutiveLosses = 0;
+                    aiConsecutiveWins = 0;
+                    resultEl.textContent = `무승부!${abilityText} 변동 없음`;
+                    resultEl.className = 'result-message draw';
+                    setTimeout(() => resultEl.classList.add('show'), 50);
                 }
-                if (wildBonus > 0) {
-                    aiGold += wildBonus;
+
+                if (ability && ability.name === '치유') {
+                    playerGold += 100;
+                    resultEl.textContent += ' | +100G 회복';
                 }
 
-                aiConsecutiveWins++;
-                aiConsecutiveLosses = 0;
+                aiSealed = sealNextTurn;
 
-                let msg = playerProtected
-                    ? `패배!${abilityText} 보호됨! 골드 손실 없음`
-                    : `패배!${abilityText}`;
-                if (!playerProtected && !isFreePlay) msg += ` | -${goldLost}G`;
-                if (ability && ability.name === '반격' && !playerProtected) msg += ' [반격 50% 회수]';
-                if (currentEvent && currentEvent.id === 'poison' && !playerProtected) msg += ' [독안개]';
-                if (activeItem === 'shield') msg += ' [방패]';
-                if (activeItem === 'coin') msg += ' [주화 3배]';
-                if (isReversed) msg += ' [역전]';
-                resultEl.textContent = msg;
-                resultEl.className = 'result-message lose';
-            } else {
-                aiConsecutiveLosses = 0;
-                aiConsecutiveWins = 0;
-                resultEl.textContent = `무승부!${abilityText} 변동 없음`;
-                resultEl.className = 'result-message draw';
-            }
+                if (aiSealed) {
+                    resultEl.textContent += ' | AI 능력 봉쇄!';
+                }
 
-            if (ability && ability.name === '치유') {
-                playerGold += 100;
-                resultEl.textContent += ' | +100G 회복';
-            }
+                activeItem = null;
+                currentEvent = null;
+                document.getElementById('event-banner').className = 'event-banner';
+                turn++;
+                betSelected = false;
+                currentBet = 0;
+                updateUI();
+                updateAiEmotion();
+                updateBetButtons();
+                renderItems();
+                document.getElementById('item-active-notice').textContent = '';
 
-            aiSealed = sealNextTurn;
-
-            if (aiSealed) {
-                resultEl.textContent += ' | AI 능력 봉쇄!';
-            }
-
-            activeItem = null;
-            currentEvent = null;
-            document.getElementById('event-banner').className = 'event-banner';
-            turn++;
-            betSelected = false;
-            currentBet = 0;
-            updateUI();
-            updateAiEmotion();
-            updateBetButtons();
-            renderItems();
-            document.getElementById('item-active-notice').textContent = '';
-
-            if (playerGold <= 0 || aiGold <= 0 || playerHand.length === 0) {
-                setTimeout(endGame, 1200);
-            } else {
-                document.getElementById('hand-label').textContent = '배당액을 먼저 선택하세요';
-            }
+                if (playerGold <= 0 || aiGold <= 0 || playerHand.length === 0) {
+                    setTimeout(endGame, 1200);
+                } else {
+                    document.getElementById('hand-label').textContent = '배당액을 먼저 선택하세요';
+                }
+            }, 900);
         }
 
         function endGame() {
@@ -2129,6 +2703,26 @@
             playerGold += 500;
             document.getElementById('player-gold').textContent = playerGold;
         }
+
+        // ==================== 반응형 리사이즈 처리 ====================
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                // 손패 다시 렌더링 (카드 크기 및 오버랩 재계산)
+                renderPlayerHand();
+                renderAiCardsBack();
+            }, 250);
+        });
+
+        // 방향 전환 감지 (모바일)
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                renderPlayerHand();
+                renderAiCardsBack();
+            }, 300);
+        });
 
     </script>
 </body>
