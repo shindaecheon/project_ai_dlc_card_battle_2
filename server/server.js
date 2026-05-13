@@ -128,11 +128,11 @@ function sendBattleResult(gameId, result) {
 
   console.log(`[Server] turn:result 전송 완료 → Player1: ${game.player1.socketId}`);
 
-  // 플레이어 2에게 결과 전송 (승자 번호 반전)
+  // 플레이어 2에게 결과 전송 (승자 번호는 그대로 전송)
   io.to(game.player2.socketId).emit('turn:result', {
     playerCard: result.player2Card,
     opponentCard: result.player1Card,
-    winner: result.winner === 1 ? 2 : (result.winner === 2 ? 1 : 0),
+    winner: result.winner, // 승자 번호 그대로 전송 (1 = 플레이어1 승리, 2 = 플레이어2 승리)
     player1Gold: result.player1Gold,
     player2Gold: result.player2Gold,
     abilities: result.abilities,
@@ -151,9 +151,9 @@ function sendBattleResult(gameId, result) {
       finalHP: { player: result.player1HP, opponent: result.player2HP }
     });
 
-    // 플레이어 2에게 게임 종료 알림 (승자 번호 반전)
+    // 플레이어 2에게 게임 종료 알림 (승자 번호는 그대로 전송)
     io.to(game.player2.socketId).emit('game:end', {
-      winner: result.finalWinner === 1 ? 2 : (result.finalWinner === 2 ? 1 : 0),
+      winner: result.finalWinner, // 승자 번호 그대로 전송
       reason: 'hp_zero_or_max_turns',
       finalHP: { player: result.player2HP, opponent: result.player1HP }
     });
