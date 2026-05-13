@@ -268,6 +268,39 @@
             text-align: center;
         }
 
+        .card .tooltip {
+            display: none;
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 10;
+            pointer-events: none;
+            border: 1px solid #ffd54f;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .card .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .card:hover .tooltip {
+            display: block;
+        }
+
         .card.disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -592,12 +625,14 @@
 
                 const ability = getAbility(card);
                 const abilityHtml = ability ? `<span class="card-ability">${ability.name}</span>` : '';
+                const tooltipHtml = ability ? `<span class="tooltip"><strong>${card.suit}${card.rank} — ${ability.name}</strong><br>${ability.desc}</span>` : '';
 
                 cardEl.innerHTML = `
                     <span class="card-suit-top">${card.suit}</span>
                     ${card.rank}
                     <span class="card-suit-bottom">${card.suit}</span>
                     ${abilityHtml}
+                    ${tooltipHtml}
                 `;
                 if (canPlay) {
                     cardEl.addEventListener('click', () => playCard(index));
