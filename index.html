@@ -46,17 +46,13 @@
             gap: 4px;
         }
 
-        .hp-display {
-            font-size: 1.2rem;
+        .gold-display {
+            font-size: 1.1rem;
             font-weight: bold;
         }
 
-        .gold-display {
-            font-size: 0.9rem;
-        }
-
-        .hp-display.player, .gold-display.player { color: #4fc3f7; }
-        .hp-display.ai, .gold-display.ai { color: #ef5350; }
+        .gold-display.player { color: #4fc3f7; }
+        .gold-display.ai { color: #ef5350; }
 
         .turn-info {
             font-size: 1rem;
@@ -425,19 +421,122 @@
             text-align: center;
             margin-bottom: 5px;
         }
+
+        .item-area {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 220px;
+        }
+
+        .item-area-label {
+            font-size: 0.8rem;
+            color: #ffd54f;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .item-slot {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            font-size: 1.4rem;
+        }
+
+        .item-slot:hover:not(.disabled) {
+            border-color: #ffd54f;
+            background: rgba(255, 213, 79, 0.2);
+            transform: scale(1.05);
+        }
+
+        .item-slot.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .item-slot.used {
+            opacity: 0.3;
+            border-color: rgba(255,255,255,0.1);
+            cursor: default;
+        }
+
+        .item-slot .item-cost {
+            font-size: 0.55rem;
+            color: #ffd54f;
+            margin-top: 2px;
+        }
+
+        .item-slot .item-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 68px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            z-index: 20;
+            pointer-events: none;
+            border: 1px solid #ffd54f;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .item-slot .item-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.95);
+        }
+
+        .item-slot:hover .item-tooltip {
+            display: block;
+        }
+
+        .item-active-notice {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #4fc3f7;
+            min-height: 16px;
+        }
     </style>
 </head>
 <body>
     <div class="game-container">
         <div class="status-bar">
             <div class="player-status">
-                <div class="hp-display player">♥ 플레이어 HP: <span id="player-hp">10</span></div>
-                <div class="gold-display player">💰 <span id="player-gold">1000</span> G</div>
+                <div class="gold-display player">💰 플레이어: <span id="player-gold">1000</span> G</div>
             </div>
             <div class="turn-info">턴: <span id="turn-count">1</span> / 10</div>
             <div class="ai-status">
-                <div class="hp-display ai">♥ AI HP: <span id="ai-hp">10</span></div>
-                <div class="gold-display ai">💰 <span id="ai-gold">1000</span> G</div>
+                <div class="gold-display ai">💰 AI: <span id="ai-gold">1000</span> G</div>
             </div>
         </div>
 
@@ -479,6 +578,12 @@
         <button onclick="startGame()">다시 하기</button>
     </div>
 
+    <div class="item-area">
+        <div class="item-area-label">아이템</div>
+        <div class="item-active-notice" id="item-active-notice"></div>
+        <div class="item-grid" id="item-grid"></div>
+    </div>
+
     <div class="peek-overlay" id="peek-overlay" style="display:none">
         <h2>♠J 엿보기 발동!</h2>
         <p>AI가 낼 카드:</p>
@@ -496,27 +601,37 @@
 
         const ABILITIES = {
             '♠J': { name: '엿보기', desc: 'AI 카드 미리 확인' },
-            '♠Q': { name: '증폭', desc: '승리 시 HP -2' },
+            '♠Q': { name: '증폭', desc: '승리 시 배당금 2배' },
             '♠K': { name: '압도', desc: '무조건 승리' },
             '♦J': { name: '도둑', desc: '승리 시 1.5배' },
             '♦Q': { name: '절약', desc: '무료 승부' },
-            '♦K': { name: '위엄', desc: '배당 2배' },
-            '♥J': { name: '회피', desc: '패배 시 HP 보호' },
-            '♥Q': { name: '치유', desc: 'HP +1 회복' },
-            '♥K': { name: '처형', desc: 'HP≤3 즉사' },
+            '♦K': { name: '위엄', desc: '배당 2배 적용' },
+            '♥J': { name: '회피', desc: '패배 시 골드 보호' },
+            '♥Q': { name: '치유', desc: '+100G 회복' },
+            '♥K': { name: '처형', desc: 'AI 골드≤300 즉시 파산' },
             '♣J': { name: '교란', desc: '문양 우선순위 역전' },
             '♣Q': { name: '매혹', desc: 'AI 최약 카드 강제' },
             '♣K': { name: '봉쇄', desc: 'AI 능력 봉인' },
         };
 
+        const ITEMS = [
+            { id: 'shield', icon: '🛡️', name: '보호 방패', desc: '이번 턴 패배해도 HP 손실 없음', cost: 150 },
+            { id: 'potion', icon: '🧪', name: '회복 물약', desc: '즉시 200G 회복', cost: 100 },
+            { id: 'needle', icon: '🗡️', name: '독 바늘', desc: '이번 턴 승리 시 배당금 2배 획득', cost: 150 },
+            { id: 'crystal', icon: '🔮', name: '수정 구슬', desc: 'AI의 다음 카드를 미리 확인', cost: 100 },
+            { id: 'swap', icon: '🔄', name: '교체 카드', desc: '손패 1장을 버리고 새로 1장 드로우', cost: 150 },
+            { id: 'coin', icon: '🎲', name: '도박꾼의 주화', desc: '이번 턴 배당금 3배 (승패 모두)', cost: 100 },
+        ];
+
         let playerHand = [];
         let aiHand = [];
-        let playerHp = 10;
-        let aiHp = 10;
+        let remainingDeck = [];
         let playerGold = 1000;
         let aiGold = 1000;
         let turn = 1;
         let currentBet = 0;
+        let activeItem = null;
+        let usedItems = [];
         let betSelected = false;
         let isPlaying = false;
         let aiSealed = false;
@@ -553,8 +668,7 @@
             const deck = shuffle(createDeck());
             playerHand = deck.slice(0, 10);
             aiHand = deck.slice(10, 20);
-            playerHp = 10;
-            aiHp = 10;
+            remainingDeck = deck.slice(20);
             playerGold = 1000;
             aiGold = 1000;
             turn = 1;
@@ -565,12 +679,16 @@
             peekMode = false;
             peekedAiCard = null;
             forcedAiIndex = null;
+            activeItem = null;
+            usedItems = [];
 
             updateUI();
             clearBattle();
+            renderItems();
             document.getElementById('result-message').textContent = '';
             document.getElementById('result-message').className = 'result-message';
             document.getElementById('ability-notice').textContent = '';
+            document.getElementById('item-active-notice').textContent = '';
             document.getElementById('hand-label').textContent = '배당액을 먼저 선택하세요';
             updateBetButtons();
         }
@@ -603,8 +721,6 @@
         }
 
         function updateUI() {
-            document.getElementById('player-hp').textContent = playerHp;
-            document.getElementById('ai-hp').textContent = aiHp;
             document.getElementById('player-gold').textContent = playerGold;
             document.getElementById('ai-gold').textContent = aiGold;
             document.getElementById('turn-count').textContent = turn;
@@ -694,13 +810,111 @@
             return 'draw';
         }
 
-        function chooseAiCard(playerCard) {
-            if (forcedAiIndex !== null) {
-                const idx = forcedAiIndex;
-                forcedAiIndex = null;
-                return idx;
+        function renderItems() {
+            const grid = document.getElementById('item-grid');
+            grid.innerHTML = '';
+            ITEMS.forEach(item => {
+                const slot = document.createElement('div');
+                const isUsed = usedItems.includes(item.id);
+                const cantAfford = playerGold < item.cost;
+                const isActive = activeItem === item.id;
+
+                let className = 'item-slot';
+                if (isUsed) className += ' used';
+                else if (cantAfford) className += ' disabled';
+                if (isActive) className += ' active';
+
+                slot.className = className;
+                slot.innerHTML = `
+                    ${item.icon}
+                    <span class="item-cost">${item.cost}G</span>
+                    <span class="item-tooltip">
+                        <strong>${item.name}</strong><br>
+                        ${item.desc}<br>
+                        비용: ${item.cost}G
+                    </span>
+                `;
+
+                if (!isUsed && !cantAfford) {
+                    slot.addEventListener('click', () => useItem(item));
+                }
+                grid.appendChild(slot);
+            });
+        }
+
+        function useItem(item) {
+            if (playerGold < item.cost) return;
+            if (usedItems.includes(item.id)) return;
+
+            if (item.id === 'potion') {
+                playerGold -= item.cost;
+                playerGold += 200;
+                usedItems.push(item.id);
+                document.getElementById('item-active-notice').textContent = '🧪 +200G 회복!';
+                updateUI();
+                renderItems();
+                return;
             }
 
+            if (item.id === 'swap') {
+                if (playerHand.length === 0 || remainingDeck.length === 0) return;
+                playerGold -= item.cost;
+                const removedIndex = Math.floor(Math.random() * playerHand.length);
+                playerHand.splice(removedIndex, 1);
+                const newCard = remainingDeck.splice(0, 1)[0];
+                playerHand.push(newCard);
+                usedItems.push(item.id);
+                document.getElementById('item-active-notice').textContent = '🔄 카드 교체 완료!';
+                updateUI();
+                renderItems();
+                return;
+            }
+
+            if (item.id === 'crystal') {
+                if (aiHand.length === 0) return;
+                playerGold -= item.cost;
+                usedItems.push(item.id);
+                const randomAiCard = aiHand[Math.floor(Math.random() * aiHand.length)];
+                const peekOverlay = document.getElementById('peek-overlay');
+                const peekCard = document.getElementById('peek-card');
+                const colorClass = SUIT_COLORS[randomAiCard.suit];
+                peekCard.className = `peek-card ${colorClass}`;
+                peekCard.innerHTML = `${randomAiCard.suit} ${randomAiCard.rank}`;
+                document.querySelector('#peek-overlay h2').textContent = '🔮 수정 구슬 발동!';
+                document.querySelector('#peek-overlay p:first-of-type').textContent = 'AI 패에 있는 카드:';
+                peekOverlay.style.display = 'flex';
+                setTimeout(() => {
+                    peekOverlay.style.display = 'none';
+                    document.querySelector('#peek-overlay h2').textContent = '♠J 엿보기 발동!';
+                    document.querySelector('#peek-overlay p:first-of-type').textContent = 'AI가 낼 카드:';
+                }, 2500);
+                document.getElementById('item-active-notice').textContent = '🔮 AI 패 확인!';
+                renderItems();
+                return;
+            }
+
+            playerGold -= item.cost;
+            activeItem = item.id;
+            usedItems.push(item.id);
+            document.getElementById('item-active-notice').textContent = `${item.icon} ${item.name} 활성화!`;
+            updateUI();
+            renderItems();
+        }
+
+        function isAiLosing() {
+            return aiGold < playerGold;
+        }
+
+        function chooseAiCardBlind() {
+            const sorted = aiHand
+                .map((card, i) => ({ card, i }))
+                .sort((a, b) => b.card.value - a.card.value);
+            const mid = Math.floor(sorted.length / 2);
+            const pick = Math.random() < 0.5 ? mid : Math.floor(Math.random() * sorted.length);
+            return sorted[pick].i;
+        }
+
+        function chooseAiCardCheat(playerCard) {
             const winnable = aiHand
                 .map((card, i) => ({ card, i }))
                 .filter(x => {
@@ -718,6 +932,20 @@
                 .map((card, i) => ({ card, i }))
                 .sort((a, b) => a.card.value - b.card.value);
             return sorted[0].i;
+        }
+
+        function chooseAiCard(playerCard) {
+            if (forcedAiIndex !== null) {
+                const idx = forcedAiIndex;
+                forcedAiIndex = null;
+                return idx;
+            }
+
+            if (isAiLosing()) {
+                return chooseAiCardCheat(playerCard);
+            }
+
+            return chooseAiCardBlind();
         }
 
         function playCard(index) {
@@ -785,9 +1013,13 @@
             let isFreePlay = false;
             let betMultiplier = 1;
             let suitReversed = false;
-            let playerHpProtected = false;
+            let playerProtected = false;
             let doubleDamage = false;
             let executeTriggered = false;
+
+            if (activeItem === 'shield') playerProtected = true;
+            if (activeItem === 'needle') doubleDamage = true;
+            if (activeItem === 'coin') betMultiplier = 3;
 
             if (ability && ability.name === '절약') {
                 isFreePlay = true;
@@ -800,25 +1032,21 @@
                 suitReversed = true;
             }
             if (ability && ability.name === '회피') {
-                playerHpProtected = true;
+                playerProtected = true;
             }
             if (ability && ability.name === '증폭') {
                 doubleDamage = true;
             }
             if (ability && ability.name === '도둑') {
-                betMultiplier = 1.5;
+                betMultiplier = Math.max(betMultiplier, 1.5);
             }
-            if (ability && ability.name === '처형' && aiHp <= 3) {
+            if (ability && ability.name === '처형' && aiGold <= 300) {
                 executeTriggered = true;
             }
 
-            if (aiAbility && !aiSealed) {
-                if (aiAbility.name === '증폭') doubleDamage = false;
-            }
-
             if (executeTriggered) {
-                aiHp = 0;
-                document.getElementById('ability-notice').textContent = '♥K 처형 발동! AI를 즉시 처치!';
+                aiGold = 0;
+                document.getElementById('ability-notice').textContent = '♥K 처형 발동! AI 파산!';
                 updateUI();
                 setTimeout(endGame, 1200);
                 return;
@@ -848,43 +1076,42 @@
             }
 
             if (winner === 'player') {
-                let damage = doubleDamage ? 2 : 1;
-                aiHp -= damage;
-
-                let goldEarned = isFreePlay ? 0 : Math.floor(effectiveBet * betMultiplier);
+                let goldEarned = isFreePlay ? 0 : Math.floor(effectiveBet * (doubleDamage ? 2 : 1) * betMultiplier);
                 if (!isFreePlay) {
                     playerGold += goldEarned;
-                    aiGold -= effectiveBet;
+                    aiGold -= goldEarned;
                 }
 
-                let msg = `승리!${abilityText} AI HP -${damage}`;
+                let msg = `승리!${abilityText}`;
                 if (!isFreePlay && goldEarned > 0) msg += ` | +${goldEarned}G`;
+                if (activeItem === 'coin') msg += ' [주화 3배]';
+                if (activeItem === 'needle') msg += ' [독 바늘 2배]';
                 resultEl.textContent = msg;
                 resultEl.className = 'result-message win';
             } else if (winner === 'ai') {
-                if (!playerHpProtected) {
-                    playerHp -= 1;
+                let goldLost = 0;
+                if (!playerProtected && !isFreePlay) {
+                    goldLost = Math.floor(effectiveBet * (activeItem === 'coin' ? 3 : 1));
+                    playerGold -= goldLost;
+                    aiGold += goldLost;
                 }
 
-                if (!isFreePlay) {
-                    playerGold -= effectiveBet;
-                    aiGold += effectiveBet;
-                }
-
-                let msg = playerHpProtected
-                    ? `패배!${abilityText} HP 보호됨!`
-                    : `패배!${abilityText} HP -1`;
-                if (!isFreePlay) msg += ` | -${effectiveBet}G`;
+                let msg = playerProtected
+                    ? `패배!${abilityText} 보호됨! 골드 손실 없음`
+                    : `패배!${abilityText}`;
+                if (!playerProtected && !isFreePlay) msg += ` | -${goldLost}G`;
+                if (activeItem === 'shield') msg += ' [방패]';
+                if (activeItem === 'coin') msg += ' [주화 3배]';
                 resultEl.textContent = msg;
                 resultEl.className = 'result-message lose';
             } else {
-                resultEl.textContent = `무승부!${abilityText} 피해 없음`;
+                resultEl.textContent = `무승부!${abilityText} 변동 없음`;
                 resultEl.className = 'result-message draw';
             }
 
             if (ability && ability.name === '치유') {
-                playerHp = Math.min(playerHp + 1, 10);
-                resultEl.textContent += ' | HP +1 회복';
+                playerGold += 100;
+                resultEl.textContent += ' | +100G 회복';
             }
 
             aiSealed = sealNextTurn;
@@ -893,13 +1120,16 @@
                 resultEl.textContent += ' | AI 능력 봉쇄!';
             }
 
+            activeItem = null;
             turn++;
             betSelected = false;
             currentBet = 0;
             updateUI();
             updateBetButtons();
+            renderItems();
+            document.getElementById('item-active-notice').textContent = '';
 
-            if (playerHp <= 0 || aiHp <= 0 || playerHand.length === 0 || playerGold <= 0) {
+            if (playerGold <= 0 || aiGold <= 0 || playerHand.length === 0) {
                 setTimeout(endGame, 1200);
             } else {
                 document.getElementById('hand-label').textContent = '배당액을 먼저 선택하세요';
@@ -914,23 +1144,19 @@
 
             overlay.style.display = 'flex';
 
-            if (playerHp <= 0 && aiHp <= 0) {
-                title.innerHTML = '<span class="lose-text">무승부!</span>';
-            } else if (aiHp <= 0) {
-                title.innerHTML = '<span class="win-text">승리!</span>';
-            } else if (playerHp <= 0) {
-                title.innerHTML = '<span class="lose-text">패배...</span>';
+            if (aiGold <= 0) {
+                title.innerHTML = '<span class="win-text">승리! AI 파산!</span>';
             } else if (playerGold <= 0) {
-                title.innerHTML = '<span class="lose-text">파산! 패배...</span>';
-            } else if (playerHp > aiHp) {
+                title.innerHTML = '<span class="lose-text">패배... 파산!</span>';
+            } else if (playerGold > aiGold) {
                 title.innerHTML = '<span class="win-text">승리!</span>';
-            } else if (playerHp < aiHp) {
+            } else if (playerGold < aiGold) {
                 title.innerHTML = '<span class="lose-text">패배...</span>';
             } else {
                 title.innerHTML = '<span class="lose-text">무승부!</span>';
             }
 
-            score.textContent = `최종 HP — 플레이어: ${playerHp} / AI: ${aiHp}`;
+            score.textContent = '';
             gold.textContent = `최종 골드 — 플레이어: ${playerGold}G / AI: ${aiGold}G`;
         }
 
