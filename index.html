@@ -3030,8 +3030,19 @@
                     });
                 }
 
+                // 상대방 카드도 화면에 표시
+                const aiBattleEl = document.getElementById('ai-battle-card');
+                if (aiBattleEl && data.opponentCard) {
+                    renderBattleCard(aiBattleEl, data.opponentCard);
+                    console.log('[Client] 상대 카드 화면 표시:', data.opponentCard.rank + data.opponentCard.suit);
+                }
+
                 // 배틀 결과 표시
                 showBattleResultMultiplayer(data);
+
+                // 손패 UI 즉시 업데이트 (카드 제거 반영)
+                renderPlayerHand();
+                console.log('[Client] 손패 재렌더링 완료, 남은 카드:', playerHand.length);
 
                 // 배팅 초기화
                 betSelected = false;
@@ -3048,6 +3059,18 @@
 
                 // 다음 턴을 위해 배팅부터 다시 시작
                 setTimeout(() => {
+                    // 배틀 카드 영역 초기화
+                    const playerBattleEl = document.getElementById('player-battle-card');
+                    const aiBattleEl = document.getElementById('ai-battle-card');
+                    if (playerBattleEl) {
+                        playerBattleEl.className = 'battle-card empty';
+                        playerBattleEl.innerHTML = '?';
+                    }
+                    if (aiBattleEl) {
+                        aiBattleEl.className = 'battle-card empty';
+                        aiBattleEl.innerHTML = '?';
+                    }
+
                     isPlaying = false;
                     renderPlayerHand();
 
@@ -3092,6 +3115,21 @@
             if (!isPlaying || !currentGameId) return;
 
             isPlaying = false;
+
+            // 선택한 카드를 배틀 영역에 표시
+            const selectedCard = playerHand[index];
+            const playerBattleEl = document.getElementById('player-battle-card');
+            if (playerBattleEl) {
+                renderBattleCard(playerBattleEl, selectedCard);
+                console.log('[Client] 내 카드 화면 표시:', selectedCard.rank + selectedCard.suit);
+            }
+
+            // 상대 카드는 뒷면으로 표시
+            const aiBattleEl = document.getElementById('ai-battle-card');
+            if (aiBattleEl) {
+                aiBattleEl.className = 'battle-card card-back';
+                aiBattleEl.innerHTML = '?';
+            }
 
             // 서버에 카드 제출 (서버가 카드를 관리)
             socket.emit('card:submit', {
