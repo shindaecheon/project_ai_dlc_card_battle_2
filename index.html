@@ -2331,15 +2331,15 @@
         let p1Card = null;
 
         function playCard(index) {
-            if (!isPlaying) return;
-
             // 멀티플레이어 모드
             if (isMultiplayerMode) {
+                if (!isPlaying || !betSelected) return;
                 playCardMultiplayer(index);
                 return;
             }
 
-            // 일반 모드는 배팅 필요
+            // 일반 모드
+            if (!isPlaying) return;
             if (!betSelected) return;
 
             if (gameMode === 'pvp') {
@@ -2884,6 +2884,7 @@
                 turn = 1;
                 betSelected = false;
                 currentBet = 0;
+                isPlaying = false; // 배팅 먼저 해야 함
                 updateUIMultiplayer();
                 renderPlayerHand();
             });
