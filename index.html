@@ -377,13 +377,17 @@
 
         .hand {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: center;
+            align-items: center;
+            padding: 5px 20px;
+            position: relative;
+            height: 145px;
         }
 
         .card {
             width: 80px;
+            min-width: 80px;
             height: 115px;
             border-radius: 8px;
             background: #fff;
@@ -395,16 +399,18 @@
             font-weight: bold;
             font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             border: 2px solid transparent;
+            flex-shrink: 0;
         }
 
         .card:hover {
-            transform: translateY(-15px) scale(1.05);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.4), 0 0 0 3px rgba(192, 192, 192, 0.6);
+            transform: translateY(-25px) scale(1.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5), 0 0 0 3px rgba(192, 192, 192, 0.6);
             border-color: #C0C0C0;
+            z-index: 100;
         }
 
         .card:active {
@@ -524,6 +530,7 @@
             height: 170px;
             background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 50%, #2a2a2a 100%);
             border: 3px solid #4a4a4a;
+            border-radius: 10px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 4px 15px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
@@ -536,22 +543,47 @@
             color: #5a5a5a;
         }
 
+        .ai-card-back {
+            width: 40px;
+            height: 58px;
+            border-radius: 5px;
+            background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 50%, #2a2a2a 100%);
+            border: 2px solid #4a4a4a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .ai-card-back::before {
+            content: '🂠';
+            font-size: 1.5rem;
+            color: #5a5a5a;
+        }
+
         .battle-card.flip {
-            animation: cardFlip 0.8s ease-in-out;
+            animation: cardFlip 0.6s ease-in-out;
         }
 
         @keyframes cardFlip {
             0% {
                 transform: rotateY(0deg) scale(1);
             }
-            49% {
+            50% {
                 transform: rotateY(90deg) scale(1.1);
+                opacity: 0;
             }
             51% {
                 transform: rotateY(90deg) scale(1.1);
+                opacity: 0;
+            }
+            52% {
+                transform: rotateY(90deg) scale(1.1);
+                opacity: 1;
             }
             100% {
-                transform: rotateY(0deg) scale(1);
+                transform: rotateY(180deg) scale(1);
             }
         }
 
@@ -607,14 +639,6 @@
             margin-bottom: 20px;
         }
 
-        .card-back {
-            width: 40px;
-            height: 58px;
-            border-radius: 5px;
-            background: linear-gradient(135deg, #1565c0, #0d47a1);
-            border: 2px solid #1976d2;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
     </style>
 </head>
 <body>
@@ -778,12 +802,22 @@
         function renderPlayerHand() {
             const handEl = document.getElementById('player-hand');
             handEl.innerHTML = '';
+
+            const cardCount = playerHand.length;
+            const cardWidth = 80;
+            const overlapAmount = cardCount > 1 ? Math.min(50, 400 / (cardCount - 1)) : 0;
+            const totalWidth = cardWidth + (cardCount - 1) * overlapAmount;
+            const startOffset = -totalWidth / 2 + cardWidth / 2;
+
             playerHand.forEach((card, index) => {
                 const cardEl = document.createElement('div');
                 const colorClass = SUIT_COLORS[card.suit];
                 const isFaceCard = ['J', 'Q', 'K'].includes(card.rank);
 
                 cardEl.className = `card ${colorClass}${isFaceCard ? ' face-card' : ''}${!isPlaying ? ' disabled' : ''}`;
+                cardEl.style.left = `calc(50% + ${startOffset + index * overlapAmount}px)`;
+                cardEl.style.zIndex = index;
+
                 cardEl.innerHTML = `
                     <div class="card-corner card-corner-top">
                         <div class="corner-rank">${card.rank}</div>
@@ -809,7 +843,7 @@
             container.innerHTML = '';
             for (let i = 0; i < aiHand.length; i++) {
                 const back = document.createElement('div');
-                back.className = 'card-back';
+                back.className = 'ai-card-back';
                 container.appendChild(back);
             }
         }
@@ -819,8 +853,9 @@
             const aiBattle = document.getElementById('ai-battle-card');
             playerBattle.className = 'battle-card empty';
             playerBattle.innerHTML = '?';
-            aiBattle.className = 'battle-card empty';
-            aiBattle.innerHTML = '?';
+            // AI 카드는 뒷면으로 초기화
+            aiBattle.className = 'battle-card card-back';
+            aiBattle.innerHTML = '';
         }
 
         function showResultMessage(type, message, subMessage) {
@@ -884,7 +919,6 @@
 
         function playCard(index) {
             if (!isPlaying) return;
-            isPlaying = false;
 
             const playerCard = playerHand[index];
             const aiIndex = chooseAiCard(playerCard);
@@ -901,29 +935,30 @@
                 selectedCard.classList.add('selecting');
             }
 
-            // 카드 제거 (애니메이션 후)
+            // 카드 제거 (애니메이션 후) - 재렌더링은 나중에
             setTimeout(() => {
                 playerHand.splice(index, 1);
                 aiHand.splice(aiIndex, 1);
-                renderPlayerHand();
-                renderAiCardsBack();
+                // 여기서는 재렌더링하지 않음
             }, 200);
+
+            // isPlaying은 전투가 끝날 때까지 true 유지
 
             // 플레이어 카드 먼저 표시
             renderBattleCard(playerBattleEl, playerCard, null, false);
 
-            // 0.3초 후 AI 카드 뒷면 먼저 표시
+            // 0.3초 후 AI 카드 뒤집기 시작 (이미 뒷면이 깔려있음)
             setTimeout(() => {
-                // 뒷면 표시
-                aiBattleEl.className = 'battle-card card-back';
-                aiBattleEl.innerHTML = '';
+                // 뒤집기 애니메이션 시작
+                aiBattleEl.classList.add('flip');
 
-                // 0.4초 후 뒤집기 시작하면서 앞면 공개
+                // 0.3초 후 (90도 지점) 앞면 내용으로 교체
                 setTimeout(() => {
-                    renderBattleCard(aiBattleEl, aiCard, null, true);
-                }, 400);
+                    renderBattleCard(aiBattleEl, aiCard, null, false);
+                    aiBattleEl.classList.add('flip');
+                }, 300);
 
-                // 0.9초 후 승패 판정 및 애니메이션 (뒤집기 완료 후)
+                // 0.6초 후 승패 판정 및 애니메이션 (뒤집기 완료 후)
                 setTimeout(() => {
                     let playerWon = false;
                     let aiWon = false;
@@ -945,7 +980,15 @@
                     renderBattleCard(aiBattleEl, aiCard, aiWon ? true : (playerWon ? false : null));
 
                     turn++;
-                    updateUI();
+
+                    // HP 바만 업데이트 (손패는 나중에)
+                    document.getElementById('player-hp').textContent = playerHp;
+                    document.getElementById('ai-hp').textContent = aiHp;
+                    document.getElementById('turn-count').textContent = turn;
+                    document.getElementById('ai-card-count').textContent = aiHand.length;
+                    updateHpBar('player', playerHp, 10);
+                    updateHpBar('ai', aiHp, 10);
+                    renderAiCardsBack();
 
                     if (playerHp <= 0 || aiHp <= 0 || playerHand.length === 0) {
                         setTimeout(endGame, 1500);
@@ -954,9 +997,10 @@
                             isPlaying = true;
                             renderPlayerHand();
                             clearBattle();
+                            hideResultMessage();
                         }, 1500);
                     }
-                }, 900);
+                }, 600);
             }, 300);
         }
 
