@@ -2849,6 +2849,35 @@
         let myTurn = false;
         let myPlayerNumber = 0; // 1 또는 2
 
+        // 게임 상태 메시지 표시 함수
+        function showGameStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('ability-notice');
+            if (!statusDiv) return;
+
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            statusDiv.style.fontSize = '1.2rem';
+            statusDiv.style.fontWeight = 'bold';
+            statusDiv.style.padding = '15px';
+            statusDiv.style.margin = '10px 0';
+            statusDiv.style.borderRadius = '8px';
+
+            // 타입에 따른 색상
+            if (type === 'waiting') {
+                statusDiv.style.backgroundColor = '#ff9800';
+                statusDiv.style.color = 'white';
+            } else if (type === 'action') {
+                statusDiv.style.backgroundColor = '#4caf50';
+                statusDiv.style.color = 'white';
+            } else if (type === 'result') {
+                statusDiv.style.backgroundColor = '#2196f3';
+                statusDiv.style.color = 'white';
+            } else {
+                statusDiv.style.backgroundColor = '#9c27b0';
+                statusDiv.style.color = 'white';
+            }
+        }
+
         function initWebSocket() {
             // CloudFront/프록시 환경 호환성을 위한 옵션
             socket = io({
@@ -2915,16 +2944,16 @@
                 updateBettingButtons(0);
 
                 if (myTurn) {
-                    showAbilityNotice('당신의 차례입니다! 배팅을 선택하세요.', 'info');
+                    showGameStatus('💰 당신의 차례입니다! 배팅을 선택하세요.', 'action');
                 } else {
-                    showAbilityNotice('상대방이 배팅 중입니다...', 'info');
+                    showGameStatus('⏳ 상대방이 배팅 중입니다...', 'waiting');
                 }
             });
 
             // 배팅 확인
             socket.on('bet:confirmed', (data) => {
                 console.log('[Client] ✅ bet:confirmed 수신:', data.betAmount);
-                showAbilityNotice('배팅 완료! 상대방 차례...', 'info');
+                showGameStatus(`✅ ${data.betAmount}G 배팅 완료! 상대방 차례...`, 'waiting');
             });
 
             // 상대 배팅 정보
@@ -2936,18 +2965,8 @@
                 // 배팅 버튼 업데이트 (상대 금액 이상만 표시)
                 updateBettingButtons(data.betAmount);
 
-                // 상대 배팅 알림 (금액은 숨김)
-                const resultDiv = document.getElementById('result-message');
-                if (resultDiv) {
-                    resultDiv.textContent = `🎲 상대가 배팅했습니다!\n당신의 차례입니다. (최소 ${data.betAmount}G)`;
-                    resultDiv.style.display = 'block';
-                    resultDiv.style.fontSize = '1.2rem';
-                    resultDiv.style.backgroundColor = '#ff9800';
-                    setTimeout(() => {
-                        resultDiv.style.display = 'none';
-                        resultDiv.style.backgroundColor = '';
-                    }, 2000);
-                }
+                // 상대가 레이즈했음을 알림
+                showGameStatus(`🔥 상대가 ${data.betAmount}G로 레이즈했습니다! 당신의 차례입니다.`, 'action');
             });
 
             // 배팅 완료
@@ -2968,19 +2987,8 @@
 
                 console.log('[Client] renderPlayerHand 호출 완료');
 
-                // 배팅 완료 메시지 표시
-                const resultDiv = document.getElementById('result-message');
-                if (resultDiv) {
-                    resultDiv.textContent = `✅ 배팅 완료!\n내: ${data.playerBet}G | 상대: ${data.opponentBet}G\n\n💡 카드를 선택하세요!`;
-                    resultDiv.style.display = 'block';
-                    resultDiv.style.fontSize = '1.3rem';
-                    resultDiv.style.fontWeight = 'bold';
-                    resultDiv.style.backgroundColor = '#4caf50';
-                    setTimeout(() => {
-                        resultDiv.style.display = 'none';
-                        resultDiv.style.backgroundColor = '';
-                    }, 2500);
-                }
+                // 배팅 완료 알림
+                showGameStatus(`✅ 배팅 완료! (내: ${data.playerBet}G vs 상대: ${data.opponentBet}G) 💡 카드를 선택하세요!`, 'action');
             });
 
             // 타이머 업데이트
@@ -3014,20 +3022,11 @@
             // 상대 대기 중
             socket.on('turn:waiting', () => {
                 console.log('[Client] 상대방 카드 제출 대기 중...');
-
-                const resultDiv = document.getElementById('result-message');
-                if (resultDiv) {
-                    resultDiv.textContent = `⏳ 상대방이 카드를 선택하는 중입니다...`;
-                    resultDiv.style.display = 'block';
-                    resultDiv.style.fontSize = '1.2rem';
-                    resultDiv.style.backgroundColor = '#9c27b0';
-                    // 결과가 나올 때까지 표시 유지
-                }
+                showGameStatus('⏳ 카드 제출 완료! 상대방이 카드를 선택하는 중...', 'waiting');
             });
 
             // 턴 결과
             socket.on('turn:result', (data) => {
-                alert('🔔 turn:result 이벤트 수신!');
                 console.log('[Client] ✅✅✅ turn:result 수신 ✅✅✅');
                 console.log('[Client] 턴 결과:', data);
 
@@ -3116,7 +3115,12 @@
                     // 배팅 버튼 초기화
                     updateBettingButtons(0);
 
-                    showAbilityNotice('새 턴 시작! 배팅을 선택하세요.', 'info');
+                    // 새 턴 시작 - 플레이어 1이 먼저 배팅
+                    if (myPlayerNumber === 1) {
+                        showGameStatus('💰 새 턴 시작! 당신의 차례입니다. 배팅을 선택하세요.', 'action');
+                    } else {
+                        showGameStatus('⏳ 새 턴 시작! 상대방이 배팅 중입니다...', 'waiting');
+                    }
                 }, 2500);
             });
 
@@ -3154,6 +3158,9 @@
             if (!isPlaying || !currentGameId) return;
 
             isPlaying = false;
+
+            // 카드 제출 상태 표시
+            showGameStatus('🎴 카드 제출 중...', 'info');
 
             // 선택한 카드를 배틀 영역에 표시
             const selectedCard = playerHand[index];
@@ -3227,6 +3234,15 @@
             resultDiv.style.borderRadius = '10px';
 
             console.log('[showBattleResultMultiplayer] 메시지 표시:', fullMessage);
+
+            // 상태 메시지도 업데이트
+            if (iWon) {
+                showGameStatus(`🎉 라운드 승리! +${currentBet}G`, 'result');
+            } else if (iLost) {
+                showGameStatus(`😢 라운드 패배 -${currentBet}G`, 'result');
+            } else {
+                showGameStatus(`🤝 무승부`, 'result');
+            }
 
             setTimeout(() => {
                 resultDiv.style.display = 'none';
