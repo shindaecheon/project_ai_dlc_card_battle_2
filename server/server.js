@@ -91,8 +91,14 @@ function startTurnTimer(gameId) {
  * @param {Object} result - 배틀 결과
  */
 function sendBattleResult(gameId, result) {
+  console.log(`[Server] sendBattleResult 호출 - gameId: ${gameId}`);
   const game = gameManager.getGame(gameId);
-  if (!game) return;
+  if (!game) {
+    console.log(`[Server] sendBattleResult - 게임을 찾을 수 없음: ${gameId}`);
+    return;
+  }
+
+  console.log(`[Server] turn:result 전송 준비 - 승자: ${result.winner}, P1Gold: ${result.player1Gold}, P2Gold: ${result.player2Gold}`);
 
   // 플레이어 1에게 결과 전송
   io.to(game.player1.socketId).emit('turn:result', {
@@ -105,6 +111,8 @@ function sendBattleResult(gameId, result) {
     newHP: { player: result.player1HP, opponent: result.player2HP }
   });
 
+  console.log(`[Server] turn:result 전송 완료 → Player1: ${game.player1.socketId}`);
+
   // 플레이어 2에게 결과 전송 (승자 번호 반전)
   io.to(game.player2.socketId).emit('turn:result', {
     playerCard: result.player2Card,
@@ -115,6 +123,8 @@ function sendBattleResult(gameId, result) {
     abilities: result.abilities,
     newHP: { player: result.player2HP, opponent: result.player1HP }
   });
+
+  console.log(`[Server] turn:result 전송 완료 → Player2: ${game.player2.socketId}`);
 
   // 게임 종료 확인
   if (result.gameEnded) {
