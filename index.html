@@ -2341,9 +2341,15 @@
         let p1Card = null;
 
         function playCard(index) {
+            console.log('[playCard] 호출됨 - index:', index, 'isMultiplayerMode:', isMultiplayerMode, 'isPlaying:', isPlaying, 'betSelected:', betSelected);
+
             // 멀티플레이어 모드
             if (isMultiplayerMode) {
-                if (!isPlaying || !betSelected) return;
+                if (!isPlaying || !betSelected) {
+                    console.log('[playCard] 멀티플레이어 모드 - 선택 불가 (isPlaying:', isPlaying, 'betSelected:', betSelected, ')');
+                    return;
+                }
+                console.log('[playCard] 멀티플레이어 모드 - playCardMultiplayer 호출');
                 playCardMultiplayer(index);
                 return;
             }
@@ -2935,16 +2941,25 @@
             socket.on('betting:complete', (data) => {
                 console.log('[Client] ✅ betting:complete 수신:', data);
                 console.log('[Client] 현재 상태 - isPlaying:', isPlaying, 'betSelected:', betSelected);
+
                 betSelected = true;
                 isPlaying = true;
                 currentBet = data.playerBet;
                 opponentBet = data.opponentBet;
-                console.log('[Client] 활성화 완료 - isPlaying:', isPlaying, 'betSelected:', betSelected);
 
-                // 카드 다시 렌더링 (클릭 가능하게)
+                console.log('[Client] 활성화 완료 - isPlaying:', isPlaying, 'betSelected:', betSelected);
+                console.log('[Client] renderPlayerHand 호출 전');
+
+                // 카드 다시 렌더링 (클릭 가능하게) - alert 전에 실행
                 renderPlayerHand();
 
-                alert(`✅ 배팅 완료!\n내: ${data.playerBet}G\n상대: ${data.opponentBet}G\n\n카드를 선택하세요!`);
+                console.log('[Client] renderPlayerHand 호출 완료');
+
+                // setTimeout으로 alert 지연 (렌더링 후 실행)
+                setTimeout(() => {
+                    alert(`✅ 배팅 완료!\n내: ${data.playerBet}G\n상대: ${data.opponentBet}G\n\n카드를 선택하세요!`);
+                }, 100);
+
                 showAbilityNotice(`배팅 완료! (내: ${data.playerBet}G vs 상대: ${data.opponentBet}G) 카드를 선택하세요!`, 'info');
             });
 
