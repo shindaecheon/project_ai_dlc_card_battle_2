@@ -99,6 +99,9 @@ function sendBattleResult(gameId, result) {
     playerCard: result.player1Card,
     opponentCard: result.player2Card,
     winner: result.winner,
+    player1Gold: result.player1Gold,
+    player2Gold: result.player2Gold,
+    abilities: result.abilities,
     newHP: { player: result.player1HP, opponent: result.player2HP }
   });
 
@@ -107,6 +110,9 @@ function sendBattleResult(gameId, result) {
     playerCard: result.player2Card,
     opponentCard: result.player1Card,
     winner: result.winner === 1 ? 2 : (result.winner === 2 ? 1 : 0),
+    player1Gold: result.player1Gold,
+    player2Gold: result.player2Gold,
+    abilities: result.abilities,
     newHP: { player: result.player2HP, opponent: result.player1HP }
   });
 

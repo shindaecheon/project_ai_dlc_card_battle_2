@@ -2847,6 +2847,7 @@
         let opponentGold = 1000;
         let opponentBet = 0;
         let myTurn = false;
+        let myPlayerNumber = 0; // 1 또는 2
 
         function initWebSocket() {
             // CloudFront/프록시 환경 호환성을 위한 옵션
@@ -2868,6 +2869,8 @@
                 console.log('[Client] 게임 시작:', data);
                 isMultiplayerMode = true;
                 currentGameId = data.gameId;
+                myPlayerNumber = data.isFirstPlayer ? 1 : 2;
+                console.log('[Client] 내 플레이어 번호:', myPlayerNumber);
 
                 // 매칭 화면 숨기기
                 document.getElementById('matching-screen').style.display = 'none';
@@ -3003,9 +3006,16 @@
                     playerHand.splice(cardIndex, 1);
                 }
 
-                // 골드 업데이트
-                playerGold = data.player1Gold || data.player2Gold;
-                opponentGold = data.player2Gold || data.player1Gold;
+                // 골드 업데이트 (플레이어 번호에 따라)
+                if (myPlayerNumber === 1) {
+                    playerGold = data.player1Gold;
+                    opponentGold = data.player2Gold;
+                } else {
+                    playerGold = data.player2Gold;
+                    opponentGold = data.player1Gold;
+                }
+
+                console.log('[Client] 골드 업데이트 - 내:', playerGold, '상대:', opponentGold);
 
                 // 골드 표시 업데이트
                 document.getElementById('player-gold').textContent = playerGold;
@@ -3092,23 +3102,43 @@
         }
 
         function showBattleResultMultiplayer(data) {
+            console.log('[showBattleResultMultiplayer] 호출:', data);
             const resultDiv = document.getElementById('result-message');
 
             let message = '';
+            let goldChange = '';
+
             if (data.winner === 1) {
-                message = `🎉 승리! ${data.playerCard.rank}${data.playerCard.suit} vs ${data.opponentCard.rank}${data.opponentCard.suit}`;
+                message = `🎉 승리!`;
+                if (myPlayerNumber === 1) {
+                    goldChange = `+${currentBet}G`;
+                } else {
+                    goldChange = `-${currentBet}G`;
+                }
             } else if (data.winner === 2) {
-                message = `😢 패배... ${data.playerCard.rank}${data.playerCard.suit} vs ${data.opponentCard.rank}${data.opponentCard.suit}`;
+                message = `😢 패배...`;
+                if (myPlayerNumber === 2) {
+                    goldChange = `+${currentBet}G`;
+                } else {
+                    goldChange = `-${currentBet}G`;
+                }
             } else {
-                message = `🤝 무승부 ${data.playerCard.rank}${data.playerCard.suit} vs ${data.opponentCard.rank}${data.opponentCard.suit}`;
+                message = `🤝 무승부`;
+                goldChange = `±0G`;
             }
 
-            resultDiv.textContent = message;
+            const fullMessage = `${message} ${goldChange}\n${data.playerCard.rank}${data.playerCard.suit} vs ${data.opponentCard.rank}${data.opponentCard.suit}`;
+
+            resultDiv.textContent = fullMessage;
             resultDiv.style.display = 'block';
+            resultDiv.style.fontSize = '1.5rem';
+            resultDiv.style.fontWeight = 'bold';
+
+            console.log('[showBattleResultMultiplayer] 메시지 표시:', fullMessage);
 
             setTimeout(() => {
                 resultDiv.style.display = 'none';
-            }, 2000);
+            }, 3000);
         }
 
         function showGameOverMultiplayer(data) {
