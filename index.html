@@ -526,6 +526,52 @@
             color: #4fc3f7;
             min-height: 16px;
         }
+
+        .ai-emotion {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .ai-emotion .emotion-face {
+            font-size: 2.5rem;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .ai-emotion .emotion-text {
+            display: block;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        .ai-emotion.nervous .emotion-face {
+            animation: shake 0.5s infinite;
+        }
+
+        .ai-emotion.angry .emotion-face {
+            animation: pulse-red 0.8s infinite;
+        }
+
+        .ai-emotion.relaxed .emotion-face {
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px) rotate(-2deg); }
+            75% { transform: translateX(3px) rotate(2deg); }
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); filter: none; }
+            50% { transform: scale(1.15); filter: drop-shadow(0 0 8px #ef5350); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
     </style>
 </head>
 <body>
@@ -540,6 +586,10 @@
             </div>
         </div>
 
+        <div class="ai-emotion" id="ai-emotion">
+            <span class="emotion-face">😐</span>
+            <span class="emotion-text">평온</span>
+        </div>
         <div class="ai-hand-display">AI 남은 카드: <span id="ai-card-count">10</span>장</div>
         <div class="ai-cards-back" id="ai-cards-back"></div>
 
@@ -621,6 +671,7 @@
             { id: 'crystal', icon: '🔮', name: '수정 구슬', desc: 'AI의 다음 카드를 미리 확인', cost: 100 },
             { id: 'swap', icon: '🔄', name: '교체 카드', desc: '손패 1장을 버리고 새로 1장 드로우', cost: 150 },
             { id: 'coin', icon: '🎲', name: '도박꾼의 주화', desc: '이번 턴 배당금 3배 (승패 모두)', cost: 100 },
+            { id: 'allin', icon: '💀', name: '올인', desc: '이번 턴 소지금 전액 베팅 (승리 시 2배, 패배 시 파산)', cost: 0 },
         ];
 
         let playerHand = [];
@@ -632,6 +683,8 @@
         let currentBet = 0;
         let activeItem = null;
         let usedItems = [];
+        let aiConsecutiveLosses = 0;
+        let aiConsecutiveWins = 0;
         let betSelected = false;
         let isPlaying = false;
         let aiSealed = false;
@@ -699,8 +752,11 @@
             forcedAiIndex = null;
             activeItem = null;
             usedItems = [];
+            aiConsecutiveLosses = 0;
+            aiConsecutiveWins = 0;
 
             updateUI();
+            updateAiEmotion();
             clearBattle();
             renderItems();
             document.getElementById('result-message').textContent = '';
@@ -911,6 +967,14 @@
                 return;
             }
 
+            if (item.id === 'allin') {
+                usedItems.push(item.id);
+                activeItem = 'allin';
+                document.getElementById('item-active-notice').textContent = '💀 올인! 전액 베팅!';
+                renderItems();
+                return;
+            }
+
             playerGold -= item.cost;
             activeItem = item.id;
             usedItems.push(item.id);
@@ -919,8 +983,46 @@
             renderItems();
         }
 
+        function updateAiEmotion() {
+            const el = document.getElementById('ai-emotion');
+            let face, text, className;
+
+            if (aiGold <= 300) {
+                face = '😰';
+                text = '초조...';
+                className = 'ai-emotion nervous';
+            } else if (aiConsecutiveLosses >= 3) {
+                face = '😡';
+                text = '분노!';
+                className = 'ai-emotion angry';
+            } else if (aiConsecutiveLosses >= 2) {
+                face = '😤';
+                text = '짜증남';
+                className = 'ai-emotion angry';
+            } else if (aiGold >= playerGold * 2) {
+                face = '😏';
+                text = '여유~';
+                className = 'ai-emotion relaxed';
+            } else if (aiConsecutiveWins >= 3) {
+                face = '😎';
+                text = '자신만만';
+                className = 'ai-emotion relaxed';
+            } else if (aiConsecutiveWins >= 2) {
+                face = '🙂';
+                text = '기분 좋음';
+                className = 'ai-emotion';
+            } else {
+                face = '😐';
+                text = '평온';
+                className = 'ai-emotion';
+            }
+
+            el.className = className;
+            el.innerHTML = `<span class="emotion-face">${face}</span><span class="emotion-text">${text}</span>`;
+        }
+
         function isAiLosing() {
-            return aiGold < playerGold;
+            return aiGold <= 100;
         }
 
         function chooseAiCardBlind() {
@@ -1020,6 +1122,7 @@
             if (activeItem === 'shield') playerProtected = true;
             if (activeItem === 'needle') doubleDamage = true;
             if (activeItem === 'coin') betMultiplier = 3;
+            if (activeItem === 'allin') effectiveBet = playerGold;
 
             if (ability && ability.name === '절약') {
                 isFreePlay = true;
@@ -1082,6 +1185,9 @@
                     aiGold -= goldEarned;
                 }
 
+                aiConsecutiveLosses++;
+                aiConsecutiveWins = 0;
+
                 let msg = `승리!${abilityText}`;
                 if (!isFreePlay && goldEarned > 0) msg += ` | +${goldEarned}G`;
                 if (activeItem === 'coin') msg += ' [주화 3배]';
@@ -1096,6 +1202,9 @@
                     aiGold += goldLost;
                 }
 
+                aiConsecutiveWins++;
+                aiConsecutiveLosses = 0;
+
                 let msg = playerProtected
                     ? `패배!${abilityText} 보호됨! 골드 손실 없음`
                     : `패배!${abilityText}`;
@@ -1105,6 +1214,8 @@
                 resultEl.textContent = msg;
                 resultEl.className = 'result-message lose';
             } else {
+                aiConsecutiveLosses = 0;
+                aiConsecutiveWins = 0;
                 resultEl.textContent = `무승부!${abilityText} 변동 없음`;
                 resultEl.className = 'result-message draw';
             }
@@ -1125,6 +1236,7 @@
             betSelected = false;
             currentBet = 0;
             updateUI();
+            updateAiEmotion();
             updateBetButtons();
             renderItems();
             document.getElementById('item-active-notice').textContent = '';
