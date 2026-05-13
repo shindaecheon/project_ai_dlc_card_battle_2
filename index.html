@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카드 배틀</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a5c2a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 25px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+        }
+
+        .hp-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .hp-display.player { color: #4fc3f7; }
+        .hp-display.ai { color: #ef5350; }
+
+        .turn-info {
+            font-size: 1rem;
+            color: #ffd54f;
+        }
+
+        .battle-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            min-height: 220px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 16px;
+        }
+
+        .battle-card {
+            width: 120px;
+            height: 170px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: #fff;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .battle-card.red { color: #d32f2f; }
+        .battle-card.black { color: #212121; }
+
+        .battle-card .suit-top {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            font-size: 0.9rem;
+        }
+
+        .battle-card .suit-bottom {
+            position: absolute;
+            bottom: 8px;
+            right: 10px;
+            font-size: 0.9rem;
+            transform: rotate(180deg);
+        }
+
+        .battle-card.empty {
+            background: rgba(255,255,255,0.1);
+            border: 2px dashed rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.3);
+            font-size: 1rem;
+            box-shadow: none;
+        }
+
+        .battle-label {
+            text-align: center;
+        }
+
+        .battle-label p {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .vs-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd54f;
+        }
+
+        .result-message {
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            min-height: 40px;
+            line-height: 40px;
+        }
+
+        .result-message.win { color: #4fc3f7; }
+        .result-message.lose { color: #ef5350; }
+        .result-message.draw { color: #ffd54f; }
+
+        .hand-area {
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .hand-label {
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            opacity: 0.7;
+        }
+
+        .hand {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            width: 80px;
+            height: 115px;
+            border-radius: 8px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .card.red { color: #d32f2f; }
+        .card.black { color: #212121; }
+
+        .card .card-suit-top {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            font-size: 0.7rem;
+        }
+
+        .card .card-suit-bottom {
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            font-size: 0.7rem;
+            transform: rotate(180deg);
+        }
+
+        .card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .game-over-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .game-over-overlay h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .game-over-overlay .win-text { color: #4fc3f7; }
+        .game-over-overlay .lose-text { color: #ef5350; }
+
+        .game-over-overlay button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            background: #ffd54f;
+            color: #333;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .game-over-overlay button:hover {
+            background: #ffca28;
+        }
+
+        .ai-hand-display {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .ai-cards-back {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .card-back {
+            width: 40px;
+            height: 58px;
+            border-radius: 5px;
+            background: linear-gradient(135deg, #1565c0, #0d47a1);
+            border: 2px solid #1976d2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="status-bar">
+            <div class="hp-display player">♥ 플레이어 HP: <span id="player-hp">10</span></div>
+            <div class="turn-info">턴: <span id="turn-count">1</span> / 10</div>
+            <div class="hp-display ai">♥ AI HP: <span id="ai-hp">10</span></div>
+        </div>
+
+        <div class="ai-hand-display">AI 남은 카드: <span id="ai-card-count">10</span>장</div>
+        <div class="ai-cards-back" id="ai-cards-back"></div>
+
+        <div class="result-message" id="result-message"></div>
+
+        <div class="battle-area">
+            <div class="battle-label">
+                <div class="battle-card empty" id="player-battle-card">?</div>
+                <p>플레이어</p>
+            </div>
+            <div class="vs-text">VS</div>
+            <div class="battle-label">
+                <div class="battle-card empty" id="ai-battle-card">?</div>
+                <p>AI</p>
+            </div>
+        </div>
+
+        <div class="hand-area">
+            <div class="hand-label">내 패 (카드를 클릭하여 제출)</div>
+            <div class="hand" id="player-hand"></div>
+        </div>
+    </div>
+
+    <div class="game-over-overlay" id="game-over" style="display:none">
+        <h1 id="game-over-title"></h1>
+        <p id="game-over-score" style="font-size:1.2rem; margin-bottom:10px;"></p>
+        <button onclick="startGame()">다시 하기</button>
+    </div>
+
+    <script>
+        const SUITS = ['♠', '♥', '♦', '♣'];
+        const SUIT_COLORS = { '♠': 'black', '♥': 'red', '♦': 'red', '♣': 'black' };
+        const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        const RANK_VALUES = { 'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13 };
+
+        let playerHand = [];
+        let aiHand = [];
+        let playerHp = 10;
+        let aiHp = 10;
+        let turn = 1;
+        let isPlaying = false;
+
+        function createDeck() {
+            const deck = [];
+            for (const suit of SUITS) {
+                for (const rank of RANKS) {
+                    deck.push({ suit, rank, value: RANK_VALUES[rank] });
+                }
+            }
+            return deck;
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startGame() {
+            document.getElementById('game-over').style.display = 'none';
+            const deck = shuffle(createDeck());
+            playerHand = deck.slice(0, 10);
+            aiHand = deck.slice(10, 20);
+            playerHp = 10;
+            aiHp = 10;
+            turn = 1;
+            isPlaying = true;
+
+            updateUI();
+            clearBattle();
+            document.getElementById('result-message').textContent = '';
+            document.getElementById('result-message').className = 'result-message';
+        }
+
+        function updateUI() {
+            document.getElementById('player-hp').textContent = playerHp;
+            document.getElementById('ai-hp').textContent = aiHp;
+            document.getElementById('turn-count').textContent = turn;
+            document.getElementById('ai-card-count').textContent = aiHand.length;
+
+            renderPlayerHand();
+            renderAiCardsBack();
+        }
+
+        function renderPlayerHand() {
+            const handEl = document.getElementById('player-hand');
+            handEl.innerHTML = '';
+            playerHand.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                const colorClass = SUIT_COLORS[card.suit];
+                cardEl.className = `card ${colorClass}${!isPlaying ? ' disabled' : ''}`;
+                cardEl.innerHTML = `
+                    <span class="card-suit-top">${card.suit}</span>
+                    ${card.rank}
+                    <span class="card-suit-bottom">${card.suit}</span>
+                `;
+                if (isPlaying) {
+                    cardEl.addEventListener('click', () => playCard(index));
+                }
+                handEl.appendChild(cardEl);
+            });
+        }
+
+        function renderAiCardsBack() {
+            const container = document.getElementById('ai-cards-back');
+            container.innerHTML = '';
+            for (let i = 0; i < aiHand.length; i++) {
+                const back = document.createElement('div');
+                back.className = 'card-back';
+                container.appendChild(back);
+            }
+        }
+
+        function clearBattle() {
+            const playerBattle = document.getElementById('player-battle-card');
+            const aiBattle = document.getElementById('ai-battle-card');
+            playerBattle.className = 'battle-card empty';
+            playerBattle.innerHTML = '?';
+            aiBattle.className = 'battle-card empty';
+            aiBattle.innerHTML = '?';
+        }
+
+        function renderBattleCard(element, card) {
+            const colorClass = SUIT_COLORS[card.suit];
+            element.className = `battle-card ${colorClass}`;
+            element.innerHTML = `
+                <span class="suit-top">${card.suit}</span>
+                ${card.rank}
+                <span class="suit-bottom">${card.suit}</span>
+            `;
+        }
+
+        function playCard(index) {
+            if (!isPlaying) return;
+            isPlaying = false;
+
+            const playerCard = playerHand.splice(index, 1)[0];
+            const aiIndex = chooseAiCard(playerCard);
+            const aiCard = aiHand.splice(aiIndex, 1)[0];
+
+            renderBattleCard(document.getElementById('player-battle-card'), playerCard);
+            renderBattleCard(document.getElementById('ai-battle-card'), aiCard);
+
+            const resultEl = document.getElementById('result-message');
+
+            if (playerCard.value > aiCard.value) {
+                aiHp--;
+                resultEl.textContent = `승리! AI가 HP를 1 잃었습니다.`;
+                resultEl.className = 'result-message win';
+            } else if (playerCard.value < aiCard.value) {
+                playerHp--;
+                resultEl.textContent = `패배! HP를 1 잃었습니다.`;
+                resultEl.className = 'result-message lose';
+            } else {
+                resultEl.textContent = `무승부! 피해 없음.`;
+                resultEl.className = 'result-message draw';
+            }
+
+            turn++;
+            updateUI();
+
+            if (playerHp <= 0 || aiHp <= 0 || playerHand.length === 0) {
+                setTimeout(endGame, 1200);
+            } else {
+                setTimeout(() => { isPlaying = true; renderPlayerHand(); }, 1000);
+            }
+        }
+
+        function chooseAiCard(playerCard) {
+            // AI 전략: 이길 수 있는 카드 중 가장 낮은 것을 사용, 없으면 가장 낮은 카드를 버림
+            const winnable = aiHand
+                .map((card, i) => ({ card, i }))
+                .filter(x => x.card.value > playerCard.value)
+                .sort((a, b) => a.card.value - b.card.value);
+
+            if (winnable.length > 0) {
+                return winnable[0].i;
+            }
+
+            const sorted = aiHand
+                .map((card, i) => ({ card, i }))
+                .sort((a, b) => a.card.value - b.card.value);
+            return sorted[0].i;
+        }
+
+        function endGame() {
+            const overlay = document.getElementById('game-over');
+            const title = document.getElementById('game-over-title');
+            const score = document.getElementById('game-over-score');
+
+            overlay.style.display = 'flex';
+
+            if (playerHp <= 0 && aiHp <= 0) {
+                title.innerHTML = '<span class="lose-text">무승부!</span>';
+            } else if (aiHp <= 0) {
+                title.innerHTML = '<span class="win-text">승리!</span>';
+            } else if (playerHp <= 0) {
+                title.innerHTML = '<span class="lose-text">패배...</span>';
+            } else if (playerHp > aiHp) {
+                title.innerHTML = '<span class="win-text">승리!</span>';
+            } else if (playerHp < aiHp) {
+                title.innerHTML = '<span class="lose-text">패배...</span>';
+            } else {
+                title.innerHTML = '<span class="lose-text">무승부!</span>';
+            }
+
+            score.textContent = `최종 HP — 플레이어: ${playerHp} / AI: ${aiHp}`;
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
