@@ -475,10 +475,18 @@
             cursor: not-allowed;
         }
 
-        .item-slot.used {
-            opacity: 0.3;
-            border-color: rgba(255,255,255,0.1);
-            cursor: default;
+        .item-slot .item-count {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: #4fc3f7;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            padding: 1px 4px;
+            min-width: 16px;
+            text-align: center;
         }
 
         .item-slot .item-cost {
@@ -631,7 +639,7 @@
         let turn = 1;
         let currentBet = 0;
         let activeItem = null;
-        let usedItems = [];
+        let itemInventory = {}; // 아이템 소지 개수 { 'shield': 2, 'potion': 2, ... }
         let betSelected = false;
         let isPlaying = false;
         let aiSealed = false;
@@ -680,7 +688,12 @@
             peekedAiCard = null;
             forcedAiIndex = null;
             activeItem = null;
-            usedItems = [];
+
+            // 초기 아이템 지급 (각 2개씩)
+            itemInventory = {};
+            ITEMS.forEach(item => {
+                itemInventory[item.id] = 2;
+            });
 
             updateUI();
             clearBattle();
@@ -815,27 +828,28 @@
             grid.innerHTML = '';
             ITEMS.forEach(item => {
                 const slot = document.createElement('div');
-                const isUsed = usedItems.includes(item.id);
-                const cantAfford = playerGold < item.cost;
+                const ownedCount = itemInventory[item.id] || 0;
+                const cantAfford = ownedCount === 0 && playerGold < item.cost;
                 const isActive = activeItem === item.id;
 
                 let className = 'item-slot';
-                if (isUsed) className += ' used';
-                else if (cantAfford) className += ' disabled';
+                if (ownedCount === 0 && cantAfford) className += ' disabled';
                 if (isActive) className += ' active';
 
                 slot.className = className;
                 slot.innerHTML = `
                     ${item.icon}
-                    <span class="item-cost">${item.cost}G</span>
+                    <span class="item-count">${ownedCount}</span>
+                    <span class="item-cost">${ownedCount === 0 ? item.cost + 'G' : '사용'}</span>
                     <span class="item-tooltip">
                         <strong>${item.name}</strong><br>
                         ${item.desc}<br>
-                        비용: ${item.cost}G
+                        소지: ${ownedCount}개<br>
+                        ${ownedCount === 0 ? '구매 비용: ' + item.cost + 'G' : '클릭하여 사용'}
                     </span>
                 `;
 
-                if (!isUsed && !cantAfford) {
+                if (ownedCount > 0 || (ownedCount === 0 && playerGold >= item.cost)) {
                     slot.addEventListener('click', () => useItem(item));
                 }
                 grid.appendChild(slot);
@@ -843,13 +857,23 @@
         }
 
         function useItem(item) {
-            if (playerGold < item.cost) return;
-            if (usedItems.includes(item.id)) return;
+            const ownedCount = itemInventory[item.id] || 0;
 
-            if (item.id === 'potion') {
+            // 소지 개수가 0이면 골드로 구매
+            if (ownedCount === 0) {
+                if (playerGold < item.cost) return;
                 playerGold -= item.cost;
+                itemInventory[item.id] = 1;
+                document.getElementById('item-active-notice').textContent = `${item.icon} ${item.name} 구매!`;
+                updateUI();
+                renderItems();
+                return;
+            }
+
+            // 소지 개수가 있으면 사용
+            if (item.id === 'potion') {
                 playerGold += 200;
-                usedItems.push(item.id);
+                itemInventory[item.id]--;
                 document.getElementById('item-active-notice').textContent = '🧪 +200G 회복!';
                 updateUI();
                 renderItems();
@@ -858,12 +882,11 @@
 
             if (item.id === 'swap') {
                 if (playerHand.length === 0 || remainingDeck.length === 0) return;
-                playerGold -= item.cost;
                 const removedIndex = Math.floor(Math.random() * playerHand.length);
                 playerHand.splice(removedIndex, 1);
                 const newCard = remainingDeck.splice(0, 1)[0];
                 playerHand.push(newCard);
-                usedItems.push(item.id);
+                itemInventory[item.id]--;
                 document.getElementById('item-active-notice').textContent = '🔄 카드 교체 완료!';
                 updateUI();
                 renderItems();
@@ -872,8 +895,7 @@
 
             if (item.id === 'crystal') {
                 if (aiHand.length === 0) return;
-                playerGold -= item.cost;
-                usedItems.push(item.id);
+                itemInventory[item.id]--;
                 const randomAiCard = aiHand[Math.floor(Math.random() * aiHand.length)];
                 const peekOverlay = document.getElementById('peek-overlay');
                 const peekCard = document.getElementById('peek-card');
@@ -893,9 +915,9 @@
                 return;
             }
 
-            playerGold -= item.cost;
+            // 나머지 아이템은 턴 중 활성화
             activeItem = item.id;
-            usedItems.push(item.id);
+            itemInventory[item.id]--;
             document.getElementById('item-active-notice').textContent = `${item.icon} ${item.name} 활성화!`;
             updateUI();
             renderItems();
