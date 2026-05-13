@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>카드 배틀</title>
+    <!-- Socket.io Client -->
+    <script>
+        // CloudFront 프록시 환경에 맞는 Socket.io 경로 동적 설정
+        const socketPath = window.location.pathname.includes('/proxy/')
+            ? '/proxy/3000/socket.io/socket.io.js'
+            : '/socket.io/socket.io.js';
+        document.write('<script src="' + socketPath + '"><\/script>');
+    </script>
     <style>
         * {
             margin: 0;
@@ -20,6 +28,75 @@
             align-items: center;
             justify-content: center;
             color: #fff;
+        }
+
+        /* Mode Selection Screen */
+        .mode-selection {
+            text-align: center;
+            padding: 40px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        }
+
+        .mode-selection h1 {
+            font-size: 3rem;
+            margin-bottom: 40px;
+            color: #ffd54f;
+        }
+
+        .mode-selection button {
+            display: block;
+            width: 300px;
+            padding: 20px;
+            margin: 15px auto;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            background: #4fc3f7;
+            color: #fff;
+        }
+
+        .mode-selection button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(79, 195, 247, 0.4);
+        }
+
+        .mode-selection button:last-child {
+            background: #66bb6a;
+        }
+
+        .mode-selection button:last-child:hover {
+            box-shadow: 0 8px 20px rgba(102, 187, 106, 0.4);
+        }
+
+        /* Matching Screen */
+        .matching-screen {
+            text-align: center;
+            padding: 60px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        }
+
+        .matching-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #ffd54f;
+        }
+
+        .matching-screen p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
         }
 
         .game-container {
@@ -44,11 +121,32 @@
         }
 
         .hp-display.player { color: #4fc3f7; }
-        .hp-display.ai { color: #ef5350; }
+        .hp-display.opponent { color: #ef5350; }
 
         .turn-info {
             font-size: 1rem;
             color: #ffd54f;
+        }
+
+        /* Timer Display */
+        .timer-display {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+
+        .timer-display.warning {
+            color: #ef5350;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .battle-area {
@@ -199,6 +297,49 @@
             transform: none !important;
         }
 
+        /* Emoji Buttons */
+        .emoji-buttons {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+        }
+
+        .emoji-buttons button {
+            font-size: 2rem;
+            padding: 10px 15px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .emoji-buttons button:hover {
+            transform: scale(1.2);
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Emoji Display */
+        .emoji-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8rem;
+            z-index: 50;
+            pointer-events: none;
+            animation: emoji-pop 0.5s ease-out;
+        }
+
+        @keyframes emoji-pop {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
         .game-over-overlay {
             position: fixed;
             top: 0;
@@ -237,14 +378,14 @@
             background: #ffca28;
         }
 
-        .ai-hand-display {
+        .opponent-hand-display {
             text-align: center;
             margin-bottom: 15px;
             font-size: 0.9rem;
             opacity: 0.7;
         }
 
-        .ai-cards-back {
+        .opponent-cards-back {
             display: flex;
             gap: 4px;
             justify-content: center;
@@ -262,15 +403,34 @@
     </style>
 </head>
 <body>
-    <div class="game-container">
+    <!-- Mode Selection Screen -->
+    <div id="mode-selection" class="mode-selection">
+        <h1>🎮 카드 배틀</h1>
+        <button id="ai-mode-btn">🤖 AI 대전</button>
+        <button id="multiplayer-mode-btn">🌐 멀티플레이어</button>
+    </div>
+
+    <!-- Matching Screen -->
+    <div id="matching-screen" class="matching-screen" style="display:none;">
+        <h2>매칭 중...</h2>
+        <p>상대방을 찾고 있습니다</p>
+    </div>
+
+    <!-- Game Container -->
+    <div class="game-container" style="display:none;">
         <div class="status-bar">
             <div class="hp-display player">♥ 플레이어 HP: <span id="player-hp">10</span></div>
             <div class="turn-info">턴: <span id="turn-count">1</span> / 10</div>
-            <div class="hp-display ai">♥ AI HP: <span id="ai-hp">10</span></div>
+            <div class="hp-display opponent">♥ 상대 HP: <span id="opponent-hp">10</span></div>
         </div>
 
-        <div class="ai-hand-display">AI 남은 카드: <span id="ai-card-count">10</span>장</div>
-        <div class="ai-cards-back" id="ai-cards-back"></div>
+        <!-- Timer Display -->
+        <div id="timer-display" class="timer-display" style="display:none;">
+            남은 시간: <span id="timer-value">10</span>초
+        </div>
+
+        <div class="opponent-hand-display">상대 남은 카드: <span id="opponent-card-count">10</span>장</div>
+        <div class="opponent-cards-back" id="opponent-cards-back"></div>
 
         <div class="result-message" id="result-message"></div>
 
@@ -281,8 +441,8 @@
             </div>
             <div class="vs-text">VS</div>
             <div class="battle-label">
-                <div class="battle-card empty" id="ai-battle-card">?</div>
-                <p>AI</p>
+                <div class="battle-card empty" id="opponent-battle-card">?</div>
+                <p>상대</p>
             </div>
         </div>
 
@@ -290,12 +450,25 @@
             <div class="hand-label">내 패 (카드를 클릭하여 제출)</div>
             <div class="hand" id="player-hand"></div>
         </div>
+
+        <!-- Emoji Buttons -->
+        <div id="emoji-buttons" class="emoji-buttons" style="display:none;">
+            <button onclick="sendEmoji('👍')">👍</button>
+            <button onclick="sendEmoji('😊')">😊</button>
+            <button onclick="sendEmoji('😢')">😢</button>
+            <button onclick="sendEmoji('😡')">😡</button>
+            <button onclick="sendEmoji('🎉')">🎉</button>
+        </div>
     </div>
 
+    <!-- Emoji Display -->
+    <div id="emoji-display" class="emoji-display" style="display:none;"></div>
+
+    <!-- Game Over Overlay -->
     <div class="game-over-overlay" id="game-over" style="display:none">
         <h1 id="game-over-title"></h1>
         <p id="game-over-score" style="font-size:1.2rem; margin-bottom:10px;"></p>
-        <button onclick="startGame()">다시 하기</button>
+        <button onclick="returnToModeSelection()">메인 메뉴로</button>
     </div>
 
     <script>
@@ -304,13 +477,178 @@
         const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
         const RANK_VALUES = { 'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13 };
 
+        // Game State
+        let gameMode = null; // 'ai' or 'multiplayer'
+        let socket = null;
+        let gameId = null;
         let playerHand = [];
-        let aiHand = [];
+        let opponentHand = []; // AI mode only
         let playerHp = 10;
-        let aiHp = 10;
+        let opponentHp = 10;
         let turn = 1;
         let isPlaying = false;
 
+        // ===== Mode Selection =====
+        function startAIMode() {
+            gameMode = 'ai';
+            hideAllScreens();
+            document.querySelector('.game-container').style.display = 'block';
+            startGameAI();
+        }
+
+        function startMultiplayerMode() {
+            gameMode = 'multiplayer';
+            initWebSocket();
+            hideAllScreens();
+            document.getElementById('matching-screen').style.display = 'flex';
+        }
+
+        // ===== Screen Management =====
+        function hideAllScreens() {
+            document.getElementById('mode-selection').style.display = 'none';
+            document.getElementById('matching-screen').style.display = 'none';
+            document.querySelector('.game-container').style.display = 'none';
+            document.getElementById('game-over').style.display = 'none';
+        }
+
+        function showModeSelection() {
+            hideAllScreens();
+            document.getElementById('mode-selection').style.display = 'block';
+        }
+
+        function returnToModeSelection() {
+            gameMode = null;
+            gameId = null;
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            showModeSelection();
+        }
+
+        // ===== WebSocket Connection =====
+        function initWebSocket() {
+            // CloudFront/프록시 환경 호환성을 위한 옵션
+            socket = io({
+                transports: ['websocket', 'polling'],
+                path: window.location.pathname.includes('/proxy/')
+                    ? '/proxy/3000/socket.io'
+                    : '/socket.io'
+            });
+
+            socket.on('connect', () => {
+                console.log('서버 연결됨');
+                socket.emit('player:join');
+            });
+
+            socket.on('disconnect', () => {
+                console.log('서버 연결 끊김');
+            });
+
+            socket.on('match:found', (data) => {
+                console.log('매칭 완료:', data);
+                gameId = data.gameId;
+            });
+
+            socket.on('game:start', (data) => {
+                console.log('게임 시작:', data);
+                gameId = data.gameId;
+                playerHand = data.hand;
+                turn = 1;
+                playerHp = 10;
+                opponentHp = 10;
+                isPlaying = true;
+
+                hideAllScreens();
+                document.querySelector('.game-container').style.display = 'block';
+                document.getElementById('timer-display').style.display = 'block';
+                document.getElementById('emoji-buttons').style.display = 'block';
+
+                updateUIMultiplayer();
+                clearBattle();
+                document.getElementById('result-message').textContent = '';
+            });
+
+            socket.on('turn:result', (data) => {
+                console.log('턴 결과:', data);
+
+                renderBattleCard(document.getElementById('player-battle-card'), data.playerCard);
+                renderBattleCard(document.getElementById('opponent-battle-card'), data.opponentCard);
+
+                playerHp = data.newHP.player;
+                opponentHp = data.newHP.opponent;
+
+                const resultEl = document.getElementById('result-message');
+                if (data.winner === 1) {
+                    resultEl.textContent = `승리! 상대가 HP를 1 잃었습니다.`;
+                    resultEl.className = 'result-message win';
+                } else if (data.winner === 2) {
+                    resultEl.textContent = `패배! HP를 1 잃었습니다.`;
+                    resultEl.className = 'result-message lose';
+                } else {
+                    resultEl.textContent = `무승부! 피해 없음.`;
+                    resultEl.className = 'result-message draw';
+                }
+
+                turn++;
+                updateUIMultiplayer();
+
+                // 다음 턴을 위해 isPlaying 재활성화
+                setTimeout(() => {
+                    isPlaying = true;
+                    renderPlayerHand();
+                }, 2000);
+            });
+
+            socket.on('game:end', (data) => {
+                console.log('게임 종료:', data);
+                document.getElementById('timer-display').style.display = 'none';
+                setTimeout(() => endGameMultiplayer(data), 1500);
+            });
+
+            socket.on('timer:tick', (data) => {
+                updateTimer(data.remainingTime);
+            });
+
+            socket.on('emoji:received', (data) => {
+                showEmoji(data.emoji);
+            });
+
+            socket.on('opponent:disconnected', () => {
+                alert('상대방의 연결이 끊어졌습니다. 게임이 종료됩니다.');
+                returnToModeSelection();
+            });
+        }
+
+        // ===== Timer =====
+        function updateTimer(remainingTime) {
+            const timerEl = document.getElementById('timer-display');
+            document.getElementById('timer-value').textContent = remainingTime;
+
+            if (remainingTime <= 3) {
+                timerEl.classList.add('warning');
+            } else {
+                timerEl.classList.remove('warning');
+            }
+        }
+
+        // ===== Emoji =====
+        function sendEmoji(emoji) {
+            if (gameMode === 'multiplayer' && socket && gameId) {
+                socket.emit('emoji:send', { gameId, emoji });
+            }
+        }
+
+        function showEmoji(emoji) {
+            const display = document.getElementById('emoji-display');
+            display.textContent = emoji;
+            display.style.display = 'block';
+            setTimeout(() => {
+                display.style.display = 'none';
+            }, 3000);
+        }
+
+        // ===== AI Mode Functions =====
         function createDeck() {
             const deck = [];
             for (const suit of SUITS) {
@@ -322,39 +660,157 @@
         }
 
         function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-            return array;
+            return shuffled;
         }
 
-        function startGame() {
-            document.getElementById('game-over').style.display = 'none';
+        function startGameAI() {
             const deck = shuffle(createDeck());
             playerHand = deck.slice(0, 10);
-            aiHand = deck.slice(10, 20);
+            opponentHand = deck.slice(10, 20);
             playerHp = 10;
-            aiHp = 10;
+            opponentHp = 10;
             turn = 1;
             isPlaying = true;
 
-            updateUI();
+            updateUIAI();
             clearBattle();
             document.getElementById('result-message').textContent = '';
             document.getElementById('result-message').className = 'result-message';
         }
 
-        function updateUI() {
+        function updateUIAI() {
             document.getElementById('player-hp').textContent = playerHp;
-            document.getElementById('ai-hp').textContent = aiHp;
+            document.getElementById('opponent-hp').textContent = opponentHp;
             document.getElementById('turn-count').textContent = turn;
-            document.getElementById('ai-card-count').textContent = aiHand.length;
+            document.getElementById('opponent-card-count').textContent = opponentHand.length;
 
             renderPlayerHand();
-            renderAiCardsBack();
+            renderOpponentCardsBack(opponentHand.length);
         }
 
+        function playCardAI(index) {
+            if (!isPlaying) return;
+            isPlaying = false;
+
+            const playerCard = playerHand.splice(index, 1)[0];
+            const aiIndex = chooseAiCard(playerCard);
+            const aiCard = opponentHand.splice(aiIndex, 1)[0];
+
+            renderBattleCard(document.getElementById('player-battle-card'), playerCard);
+            renderBattleCard(document.getElementById('opponent-battle-card'), aiCard);
+
+            const resultEl = document.getElementById('result-message');
+
+            if (playerCard.value > aiCard.value) {
+                opponentHp--;
+                resultEl.textContent = `승리! 상대가 HP를 1 잃었습니다.`;
+                resultEl.className = 'result-message win';
+            } else if (playerCard.value < aiCard.value) {
+                playerHp--;
+                resultEl.textContent = `패배! HP를 1 잃었습니다.`;
+                resultEl.className = 'result-message lose';
+            } else {
+                resultEl.textContent = `무승부! 피해 없음.`;
+                resultEl.className = 'result-message draw';
+            }
+
+            turn++;
+            updateUIAI();
+
+            if (playerHp <= 0 || opponentHp <= 0 || playerHand.length === 0) {
+                setTimeout(endGameAI, 1200);
+            } else {
+                setTimeout(() => { isPlaying = true; renderPlayerHand(); }, 1000);
+            }
+        }
+
+        function chooseAiCard(playerCard) {
+            const winnable = opponentHand
+                .map((card, i) => ({ card, i }))
+                .filter(x => x.card.value > playerCard.value)
+                .sort((a, b) => a.card.value - b.card.value);
+
+            if (winnable.length > 0) {
+                return winnable[0].i;
+            }
+
+            const sorted = opponentHand
+                .map((card, i) => ({ card, i }))
+                .sort((a, b) => a.card.value - b.card.value);
+            return sorted[0].i;
+        }
+
+        function endGameAI() {
+            const overlay = document.getElementById('game-over');
+            const title = document.getElementById('game-over-title');
+            const score = document.getElementById('game-over-score');
+
+            overlay.style.display = 'flex';
+
+            if (playerHp <= 0 && opponentHp <= 0) {
+                title.innerHTML = '<span class="lose-text">무승부!</span>';
+            } else if (opponentHp <= 0) {
+                title.innerHTML = '<span class="win-text">승리!</span>';
+            } else if (playerHp <= 0) {
+                title.innerHTML = '<span class="lose-text">패배...</span>';
+            } else if (playerHp > opponentHp) {
+                title.innerHTML = '<span class="win-text">승리!</span>';
+            } else if (playerHp < opponentHp) {
+                title.innerHTML = '<span class="lose-text">패배...</span>';
+            } else {
+                title.innerHTML = '<span class="lose-text">무승부!</span>';
+            }
+
+            score.textContent = `최종 HP — 플레이어: ${playerHp} / 상대: ${opponentHp}`;
+        }
+
+        // ===== Multiplayer Mode Functions =====
+        function updateUIMultiplayer() {
+            document.getElementById('player-hp').textContent = playerHp;
+            document.getElementById('opponent-hp').textContent = opponentHp;
+            document.getElementById('turn-count').textContent = turn;
+            document.getElementById('opponent-card-count').textContent = playerHand.length; // 추정
+
+            renderPlayerHand();
+            renderOpponentCardsBack(playerHand.length);
+        }
+
+        function playCardMultiplayer(index) {
+            if (!isPlaying) return;
+            isPlaying = false;
+
+            // 서버에 카드 제출
+            socket.emit('card:submit', { gameId, cardIndex: index });
+
+            // 제출한 카드를 손패에서 제거 (UI 업데이트)
+            playerHand.splice(index, 1);
+            renderPlayerHand();
+        }
+
+        function endGameMultiplayer(data) {
+            const overlay = document.getElementById('game-over');
+            const title = document.getElementById('game-over-title');
+            const score = document.getElementById('game-over-score');
+
+            overlay.style.display = 'flex';
+
+            if (data.winner === 0) {
+                title.innerHTML = '<span class="lose-text">무승부!</span>';
+            } else if (data.winner === 1) {
+                title.innerHTML = '<span class="win-text">승리!</span>';
+            } else {
+                title.innerHTML = '<span class="lose-text">패배...</span>';
+            }
+
+            score.textContent = `최종 HP — 플레이어: ${data.finalHP.player} / 상대: ${data.finalHP.opponent}`;
+        }
+
+        // ===== Shared UI Functions =====
         function renderPlayerHand() {
             const handEl = document.getElementById('player-hand');
             handEl.innerHTML = '';
@@ -368,16 +824,22 @@
                     <span class="card-suit-bottom">${card.suit}</span>
                 `;
                 if (isPlaying) {
-                    cardEl.addEventListener('click', () => playCard(index));
+                    cardEl.addEventListener('click', () => {
+                        if (gameMode === 'ai') {
+                            playCardAI(index);
+                        } else if (gameMode === 'multiplayer') {
+                            playCardMultiplayer(index);
+                        }
+                    });
                 }
                 handEl.appendChild(cardEl);
             });
         }
 
-        function renderAiCardsBack() {
-            const container = document.getElementById('ai-cards-back');
+        function renderOpponentCardsBack(count) {
+            const container = document.getElementById('opponent-cards-back');
             container.innerHTML = '';
-            for (let i = 0; i < aiHand.length; i++) {
+            for (let i = 0; i < count; i++) {
                 const back = document.createElement('div');
                 back.className = 'card-back';
                 container.appendChild(back);
@@ -386,11 +848,11 @@
 
         function clearBattle() {
             const playerBattle = document.getElementById('player-battle-card');
-            const aiBattle = document.getElementById('ai-battle-card');
+            const opponentBattle = document.getElementById('opponent-battle-card');
             playerBattle.className = 'battle-card empty';
             playerBattle.innerHTML = '?';
-            aiBattle.className = 'battle-card empty';
-            aiBattle.innerHTML = '?';
+            opponentBattle.className = 'battle-card empty';
+            opponentBattle.innerHTML = '?';
         }
 
         function renderBattleCard(element, card) {
@@ -403,84 +865,15 @@
             `;
         }
 
-        function playCard(index) {
-            if (!isPlaying) return;
-            isPlaying = false;
+        // ===== Initial Load =====
+        document.addEventListener('DOMContentLoaded', () => {
+            // 버튼 이벤트 핸들러 연결
+            document.getElementById('ai-mode-btn').onclick = startAIMode;
+            document.getElementById('multiplayer-mode-btn').onclick = startMultiplayerMode;
 
-            const playerCard = playerHand.splice(index, 1)[0];
-            const aiIndex = chooseAiCard(playerCard);
-            const aiCard = aiHand.splice(aiIndex, 1)[0];
-
-            renderBattleCard(document.getElementById('player-battle-card'), playerCard);
-            renderBattleCard(document.getElementById('ai-battle-card'), aiCard);
-
-            const resultEl = document.getElementById('result-message');
-
-            if (playerCard.value > aiCard.value) {
-                aiHp--;
-                resultEl.textContent = `승리! AI가 HP를 1 잃었습니다.`;
-                resultEl.className = 'result-message win';
-            } else if (playerCard.value < aiCard.value) {
-                playerHp--;
-                resultEl.textContent = `패배! HP를 1 잃었습니다.`;
-                resultEl.className = 'result-message lose';
-            } else {
-                resultEl.textContent = `무승부! 피해 없음.`;
-                resultEl.className = 'result-message draw';
-            }
-
-            turn++;
-            updateUI();
-
-            if (playerHp <= 0 || aiHp <= 0 || playerHand.length === 0) {
-                setTimeout(endGame, 1200);
-            } else {
-                setTimeout(() => { isPlaying = true; renderPlayerHand(); }, 1000);
-            }
-        }
-
-        function chooseAiCard(playerCard) {
-            // AI 전략: 이길 수 있는 카드 중 가장 낮은 것을 사용, 없으면 가장 낮은 카드를 버림
-            const winnable = aiHand
-                .map((card, i) => ({ card, i }))
-                .filter(x => x.card.value > playerCard.value)
-                .sort((a, b) => a.card.value - b.card.value);
-
-            if (winnable.length > 0) {
-                return winnable[0].i;
-            }
-
-            const sorted = aiHand
-                .map((card, i) => ({ card, i }))
-                .sort((a, b) => a.card.value - b.card.value);
-            return sorted[0].i;
-        }
-
-        function endGame() {
-            const overlay = document.getElementById('game-over');
-            const title = document.getElementById('game-over-title');
-            const score = document.getElementById('game-over-score');
-
-            overlay.style.display = 'flex';
-
-            if (playerHp <= 0 && aiHp <= 0) {
-                title.innerHTML = '<span class="lose-text">무승부!</span>';
-            } else if (aiHp <= 0) {
-                title.innerHTML = '<span class="win-text">승리!</span>';
-            } else if (playerHp <= 0) {
-                title.innerHTML = '<span class="lose-text">패배...</span>';
-            } else if (playerHp > aiHp) {
-                title.innerHTML = '<span class="win-text">승리!</span>';
-            } else if (playerHp < aiHp) {
-                title.innerHTML = '<span class="lose-text">패배...</span>';
-            } else {
-                title.innerHTML = '<span class="lose-text">무승부!</span>';
-            }
-
-            score.textContent = `최종 HP — 플레이어: ${playerHp} / AI: ${aiHp}`;
-        }
-
-        startGame();
+            // 모드 선택 화면 표시
+            showModeSelection();
+        });
     </script>
 </body>
 </html>
