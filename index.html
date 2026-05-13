@@ -1034,6 +1034,9 @@
         <div class="status-bar">
             <div class="player-status">
                 <div class="gold-display player">💰 플레이어: <span id="player-gold">1000</span> G</div>
+                <button onclick="openShop()" style="margin-top: 8px; padding: 6px 15px; font-size: 0.85rem; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ffed4e); color: #333; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);">
+                    🛒 상점
+                </button>
             </div>
             <div class="turn-info">턴: <span id="turn-count">1</span> / 10</div>
             <div class="ai-status">
@@ -1083,6 +1086,7 @@
         <p id="game-over-score" style="font-size:1.2rem; margin-bottom:10px;"></p>
         <p id="game-over-gold" style="font-size:1rem; margin-bottom:10px; color:#ffd54f;"></p>
         <button onclick="startGame()">다시 하기</button>
+        <button onclick="openShop()" style="background: linear-gradient(135deg, #ffd700, #ffed4e); color:#333; margin-top:10px;">🛒 골드 구매</button>
         <button onclick="backToMenu()" style="background:#666; color:#fff; margin-top:10px;">모드 선택으로</button>
     </div>
 
@@ -1366,6 +1370,7 @@
             usedItems = [];
             aiConsecutiveLosses = 0;
             aiConsecutiveWins = 0;
+            lowGoldWarningShown = false;
 
             updateUI();
             updateAiEmotion();
@@ -1381,7 +1386,23 @@
 
         function selectBet(amount) {
             if (betSelected) return;
-            if (playerGold < amount || aiGold < amount) return;
+
+            // 골드 부족 체크 및 상점 추천
+            if (playerGold < amount) {
+                const goToShop = confirm(
+                    `⚠️ 골드가 부족합니다!\n\n` +
+                    `필요: ${amount}G\n` +
+                    `보유: ${playerGold}G\n` +
+                    `부족: ${amount - playerGold}G\n\n` +
+                    `상점에서 골드를 구매하시겠습니까?`
+                );
+                if (goToShop) {
+                    openShop();
+                }
+                return;
+            }
+
+            if (aiGold < amount) return;
 
             currentBet = amount;
             betSelected = true;
@@ -1415,8 +1436,32 @@
             document.getElementById('turn-count').textContent = turn;
             document.getElementById('ai-card-count').textContent = aiHand.length;
 
+            // 골드 부족 경고 (파산 위험)
+            checkLowGoldWarning();
+
             renderPlayerHand();
             renderAiCardsBack();
+        }
+
+        let lowGoldWarningShown = false;
+
+        function checkLowGoldWarning() {
+            // 골드 300 이하일 때 경고 (1회만)
+            if (playerGold <= 300 && playerGold > 0 && !lowGoldWarningShown) {
+                lowGoldWarningShown = true;
+                setTimeout(() => {
+                    const buyGold = confirm(
+                        `⚠️ 골드 부족 경고!\n\n` +
+                        `현재 골드: ${playerGold}G\n` +
+                        `파산 위험: 높음\n\n` +
+                        `상점에서 골드를 구매하시겠습니까?\n` +
+                        `(이 경고는 1회만 표시됩니다)`
+                    );
+                    if (buyGold) {
+                        openShop();
+                    }
+                }, 500);
+            }
         }
 
         function renderPlayerHand() {
@@ -1550,9 +1595,24 @@
         }
 
         function useItem(item) {
-            if (playerGold < item.cost) return;
             if (usedItems.includes(item.id)) return;
             if (activeItem !== null) return;
+
+            // 골드 부족 체크 및 상점 추천
+            if (playerGold < item.cost) {
+                const goToShop = confirm(
+                    `⚠️ 골드가 부족합니다!\n\n` +
+                    `아이템: ${item.name}\n` +
+                    `필요: ${item.cost}G\n` +
+                    `보유: ${playerGold}G\n` +
+                    `부족: ${item.cost - playerGold}G\n\n` +
+                    `상점에서 골드를 구매하시겠습니까?`
+                );
+                if (goToShop) {
+                    openShop();
+                }
+                return;
+            }
 
             if (item.id === 'potion') {
                 playerGold -= item.cost;
