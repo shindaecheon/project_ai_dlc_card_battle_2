@@ -47,11 +47,103 @@
             background: #173A3B;
             height: 100vh;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
             justify-content: center;
             color: #fff;
             overflow: hidden;
+            gap: 2vw;
+        }
+
+        .game-rules-panel {
+            width: 250px;
+            max-width: 20vw;
+            height: 90vh;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 2vh 1.5vw;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .game-rules-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .game-rules-panel::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+
+        .game-rules-panel::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+
+        .game-rules-panel h3 {
+            color: #ffd54f;
+            font-size: 1.3rem;
+            margin-bottom: 1.5vh;
+            text-align: center;
+            border-bottom: 2px solid #ffd54f;
+            padding-bottom: 1vh;
+        }
+
+        .rule-section {
+            margin-bottom: 2vh;
+        }
+
+        .rule-section h4 {
+            color: #4fc3f7;
+            font-size: 1rem;
+            margin-bottom: 0.8vh;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rule-section p {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 0.5vh;
+        }
+
+        .rule-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .rule-section li {
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: rgba(255,255,255,0.75);
+            margin-bottom: 0.4vh;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .rule-section li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #ffd54f;
+        }
+
+        .card-rank-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5vh;
+        }
+
+        .card-rank-item {
+            background: rgba(255,215,0,0.2);
+            padding: 0.3vh 0.6vw;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #ffd54f;
+            font-weight: bold;
         }
 
         .game-container {
@@ -859,12 +951,12 @@
         .shop-container {
             background: linear-gradient(135deg, #173A3B, #0d2526);
             border-radius: 20px;
-            padding: 21px;
-            max-width: 630px;
-            width: 70%;
+            padding: 23.1px;
+            max-width: 693px;
+            width: 77%;
             box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
             border: 3px solid #ffd700;
-            transform: scale(0.7);
+            transform: scale(0.77);
             transform-origin: center;
         }
 
@@ -1084,6 +1176,15 @@
 
         /* 태블릿 (768px 이하) */
         @media (max-width: 768px) {
+            .game-rules-panel {
+                display: none !important;
+            }
+
+            body {
+                flex-direction: column;
+                gap: 0;
+            }
+
             .game-container {
                 max-width: 100%;
                 padding: 15px;
@@ -1507,6 +1608,72 @@
         </button>
     </div>
 
+    <div class="game-rules-panel" id="game-rules-panel" style="display:none">
+        <h3>🎮 게임 규칙</h3>
+
+        <div class="rule-section">
+            <h4>🎯 목표</h4>
+            <p>상대의 골드를 0으로 만들거나, 10턴 후 더 많은 골드를 보유하세요!</p>
+        </div>
+
+        <div class="rule-section">
+            <h4>🃏 카드 순위</h4>
+            <div class="card-rank-list">
+                <span class="card-rank-item">K > Q > J</span>
+                <span class="card-rank-item">A > 10~2</span>
+            </div>
+            <p style="margin-top: 0.5vh;">※ A는 J/Q/K를 이김</p>
+        </div>
+
+        <div class="rule-section">
+            <h4>♠️ 무늬 우선순위</h4>
+            <div class="card-rank-list">
+                <span class="card-rank-item">♠️ > ♥️ > ♦️ > ♣️</span>
+            </div>
+            <p style="margin-top: 0.5vh;">숫자가 같을 때 무늬로 승부</p>
+        </div>
+
+        <div class="rule-section">
+            <h4>💰 배팅 시스템</h4>
+            <ul>
+                <li>매 턴 배당금 선택 (50~500G)</li>
+                <li>승리: 배당금 획득</li>
+                <li>패배: 배당금 손실</li>
+                <li>무승부: 변동 없음</li>
+            </ul>
+        </div>
+
+        <div class="rule-section">
+            <h4>✨ 특수 카드</h4>
+            <ul>
+                <li>♣️J - 절약: 배당 없이 플레이</li>
+                <li>♦️J - 봉쇄: AI 능력 무효화</li>
+                <li>♥️J - 교란: 무늬 우선순위 역전</li>
+                <li>♠️J - 압도: J/Q/K 무조건 승리</li>
+                <li>♣️Q - 회피: 패배 시 손실 없음</li>
+                <li>♦️Q - 증폭: 승리 시 2배 획득</li>
+                <li>♥️Q - 치유: 승리 시 100G 추가</li>
+                <li>♠️Q - 반격: 패배 시 50% 회수</li>
+                <li>♣️K - 도둑: 승리 시 1.5배</li>
+                <li>♦️K - 위엄: 배당 2배로 베팅</li>
+                <li>♥️K - 처형: 상대 300G 이하면 즉시 승리</li>
+            </ul>
+        </div>
+
+        <div class="rule-section">
+            <h4>🛒 아이템</h4>
+            <ul>
+                <li>🧪 회복 물약 (100G)</li>
+                <li>🛡️ 보호 방패 (150G)</li>
+                <li>🗡️ 독 바늘 (150G)</li>
+                <li>🔮 수정 구슬 (100G)</li>
+                <li>🔄 교체 카드 (150G)</li>
+                <li>🎲 도박꾼의 주화 (150G)</li>
+                <li>💀 올인 (무료, 제한)</li>
+            </ul>
+        </div>
+    </div>
+
     <div class="game-container" id="game-container" style="display:none">
         <div class="status-bar">
             <div class="player-status">
@@ -1728,6 +1895,7 @@
                 return;
             }
             document.getElementById('mode-select').style.display = 'none';
+            document.getElementById('game-rules-panel').style.display = 'block';
             document.getElementById('game-container').style.display = 'block';
             document.querySelector('.item-area').style.display = 'flex';
             if (mode === 'pvp') {
@@ -1739,6 +1907,7 @@
 
         function backToMenu() {
             document.getElementById('mode-select').style.display = 'flex';
+            document.getElementById('game-rules-panel').style.display = 'none';
             document.getElementById('game-container').style.display = 'none';
             document.querySelector('.item-area').style.display = 'none';
             document.getElementById('game-over').style.display = 'none';
