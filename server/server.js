@@ -19,7 +19,7 @@ const io = new Server(server);
 
 // 서버 설정
 const PORT = process.env.PORT || 3000;
-const TURN_TIMEOUT = 10000; // 10초
+const TURN_TIMEOUT = 30000; // 30초
 
 // 정적 파일 제공 (index.html 및 관련 파일)
 app.use(express.static(path.join(__dirname, '..')));
@@ -49,7 +49,7 @@ function startTurnTimer(gameId) {
   const game = gameManager.getGame(gameId);
   if (!game || game.status !== 'playing') return;
 
-  let remainingTime = 10;
+  let remainingTime = 30;
 
   const timer = setInterval(() => {
     remainingTime--;

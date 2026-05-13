@@ -1523,7 +1523,7 @@
 
         <!-- Timer Display (멀티플레이어 전용) -->
         <div id="timer-display" class="timer-display" style="display:none;">
-            남은 시간: <span id="timer-value">10</span>초
+            남은 시간: <span id="timer-value">30</span>초
         </div>
 
         <div class="ai-emotion" id="ai-emotion">
@@ -2926,11 +2926,13 @@
             // 배팅 완료
             socket.on('betting:complete', (data) => {
                 console.log('[Client] 배팅 완료:', data);
+                console.log('[Client] isPlaying 활성화 전:', isPlaying, 'betSelected:', betSelected);
                 betSelected = true;
                 isPlaying = true;
                 currentBet = data.playerBet;
                 opponentBet = data.opponentBet;
-                showAbilityNotice(`배팅 완료! (${data.playerBet}G vs ${data.opponentBet}G) 카드를 선택하세요.`, 'info');
+                console.log('[Client] isPlaying 활성화 후:', isPlaying, 'betSelected:', betSelected);
+                showAbilityNotice(`배팅 완료! (내: ${data.playerBet}G vs 상대: ${data.opponentBet}G) 카드를 선택하세요!`, 'info');
             });
 
             // 타이머 업데이트
