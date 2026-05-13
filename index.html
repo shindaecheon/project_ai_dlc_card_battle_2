@@ -2936,8 +2936,18 @@
                 // 배팅 버튼 업데이트 (상대 금액 이상만 표시)
                 updateBettingButtons(data.betAmount);
 
-                // 상대 배팅 금액 숨김 - 긴장감 유지
-                showAbilityNotice(`상대가 배팅했습니다! 당신의 차례입니다.`, 'info');
+                // 상대 배팅 알림 (금액은 숨김)
+                const resultDiv = document.getElementById('result-message');
+                if (resultDiv) {
+                    resultDiv.textContent = `🎲 상대가 배팅했습니다!\n당신의 차례입니다. (최소 ${data.betAmount}G)`;
+                    resultDiv.style.display = 'block';
+                    resultDiv.style.fontSize = '1.2rem';
+                    resultDiv.style.backgroundColor = '#ff9800';
+                    setTimeout(() => {
+                        resultDiv.style.display = 'none';
+                        resultDiv.style.backgroundColor = '';
+                    }, 2000);
+                }
             });
 
             // 배팅 완료
@@ -2953,17 +2963,24 @@
                 console.log('[Client] 활성화 완료 - isPlaying:', isPlaying, 'betSelected:', betSelected);
                 console.log('[Client] renderPlayerHand 호출 전');
 
-                // 카드 다시 렌더링 (클릭 가능하게) - alert 전에 실행
+                // 카드 다시 렌더링 (클릭 가능하게)
                 renderPlayerHand();
 
                 console.log('[Client] renderPlayerHand 호출 완료');
 
-                // setTimeout으로 alert 지연 (렌더링 후 실행)
-                setTimeout(() => {
-                    alert(`✅ 배팅 완료!\n내: ${data.playerBet}G\n상대: ${data.opponentBet}G\n\n카드를 선택하세요!`);
-                }, 100);
-
-                showAbilityNotice(`배팅 완료! (내: ${data.playerBet}G vs 상대: ${data.opponentBet}G) 카드를 선택하세요!`, 'info');
+                // 배팅 완료 메시지 표시
+                const resultDiv = document.getElementById('result-message');
+                if (resultDiv) {
+                    resultDiv.textContent = `✅ 배팅 완료!\n내: ${data.playerBet}G | 상대: ${data.opponentBet}G\n\n💡 카드를 선택하세요!`;
+                    resultDiv.style.display = 'block';
+                    resultDiv.style.fontSize = '1.3rem';
+                    resultDiv.style.fontWeight = 'bold';
+                    resultDiv.style.backgroundColor = '#4caf50';
+                    setTimeout(() => {
+                        resultDiv.style.display = 'none';
+                        resultDiv.style.backgroundColor = '';
+                    }, 2500);
+                }
             });
 
             // 타이머 업데이트
@@ -2979,12 +2996,33 @@
             // 배팅 확인
             socket.on('bet:confirmed', (data) => {
                 console.log('[Client] 배팅 확인:', data.betAmount);
+
+                // 내 배팅 확인 메시지
+                const resultDiv = document.getElementById('result-message');
+                if (resultDiv) {
+                    resultDiv.textContent = `✔️ 내 배팅: ${data.betAmount}G\n상대방의 차례를 기다리는 중...`;
+                    resultDiv.style.display = 'block';
+                    resultDiv.style.fontSize = '1.2rem';
+                    resultDiv.style.backgroundColor = '#2196f3';
+                    setTimeout(() => {
+                        resultDiv.style.display = 'none';
+                        resultDiv.style.backgroundColor = '';
+                    }, 2000);
+                }
             });
 
             // 상대 대기 중
             socket.on('turn:waiting', () => {
                 console.log('[Client] 상대방 카드 제출 대기 중...');
-                showAbilityNotice('상대방이 카드를 선택하는 중입니다...', 'info');
+
+                const resultDiv = document.getElementById('result-message');
+                if (resultDiv) {
+                    resultDiv.textContent = `⏳ 상대방이 카드를 선택하는 중입니다...`;
+                    resultDiv.style.display = 'block';
+                    resultDiv.style.fontSize = '1.2rem';
+                    resultDiv.style.backgroundColor = '#9c27b0';
+                    // 결과가 나올 때까지 표시 유지
+                }
             });
 
             // 턴 결과
@@ -3147,52 +3185,83 @@
 
             let message = '';
             let goldChange = '';
+            let bgColor = '';
+            let emoji = '';
 
-            if (data.winner === 1) {
+            // 내가 승리했는지 판단
+            const iWon = (data.winner === 1 && myPlayerNumber === 1) || (data.winner === 2 && myPlayerNumber === 2);
+            const iLost = (data.winner === 1 && myPlayerNumber === 2) || (data.winner === 2 && myPlayerNumber === 1);
+
+            if (iWon) {
                 message = `🎉 승리!`;
-                if (myPlayerNumber === 1) {
-                    goldChange = `+${currentBet}G`;
-                } else {
-                    goldChange = `-${currentBet}G`;
-                }
-            } else if (data.winner === 2) {
-                message = `😢 패배...`;
-                if (myPlayerNumber === 2) {
-                    goldChange = `+${currentBet}G`;
-                } else {
-                    goldChange = `-${currentBet}G`;
-                }
+                goldChange = `+${currentBet}G`;
+                bgColor = '#4caf50'; // 초록색
+                emoji = '🎊';
+            } else if (iLost) {
+                message = `😢 패배`;
+                goldChange = `-${currentBet}G`;
+                bgColor = '#f44336'; // 빨간색
+                emoji = '💔';
             } else {
                 message = `🤝 무승부`;
                 goldChange = `±0G`;
+                bgColor = '#ff9800'; // 주황색
+                emoji = '🤝';
             }
 
-            const fullMessage = `${message} ${goldChange}\n${data.playerCard.rank}${data.playerCard.suit} vs ${data.opponentCard.rank}${data.opponentCard.suit}`;
+            // 능력 발동 표시
+            let abilityText = '';
+            if (data.abilities && data.abilities.length > 0) {
+                const abilityNames = data.abilities.map(a => a.ability).join(', ');
+                abilityText = `\n⚡ ${abilityNames}`;
+            }
+
+            const fullMessage = `${emoji} ${message} ${goldChange}\n\n내 카드: ${data.playerCard.rank}${data.playerCard.suit}\n상대 카드: ${data.opponentCard.rank}${data.opponentCard.suit}${abilityText}`;
 
             resultDiv.textContent = fullMessage;
             resultDiv.style.display = 'block';
-            resultDiv.style.fontSize = '1.5rem';
+            resultDiv.style.fontSize = '1.4rem';
             resultDiv.style.fontWeight = 'bold';
+            resultDiv.style.backgroundColor = bgColor;
+            resultDiv.style.padding = '20px';
+            resultDiv.style.borderRadius = '10px';
 
             console.log('[showBattleResultMultiplayer] 메시지 표시:', fullMessage);
 
             setTimeout(() => {
                 resultDiv.style.display = 'none';
-            }, 3000);
+                resultDiv.style.backgroundColor = '';
+                resultDiv.style.padding = '';
+                resultDiv.style.borderRadius = '';
+            }, 3500);
         }
 
         function showGameOverMultiplayer(data) {
             const gameOverDiv = document.getElementById('game-over');
             const finalResultDiv = document.getElementById('final-result');
 
-            if (data.winner === 1) {
-                finalResultDiv.textContent = '🎉 승리!';
-            } else if (data.winner === 2) {
-                finalResultDiv.textContent = '😢 패배...';
+            // 내가 승리했는지 판단
+            const iWon = (data.winner === 1 && myPlayerNumber === 1) || (data.winner === 2 && myPlayerNumber === 2);
+            const iLost = (data.winner === 1 && myPlayerNumber === 2) || (data.winner === 2 && myPlayerNumber === 1);
+
+            let message = '';
+            if (iWon) {
+                message = '🎉🎊 승리! 🎊🎉\n\n축하합니다!';
+                finalResultDiv.style.color = '#4caf50';
+            } else if (iLost) {
+                message = '😢💔 패배 💔😢\n\n다음에 다시 도전하세요!';
+                finalResultDiv.style.color = '#f44336';
             } else {
-                finalResultDiv.textContent = '🤝 무승부';
+                message = '🤝 무승부 🤝\n\n좋은 게임이었습니다!';
+                finalResultDiv.style.color = '#ff9800';
             }
 
+            // 최종 골드 정보
+            if (data.finalHP) {
+                message += `\n\n최종 골드\n내: ${data.finalHP.player}G\n상대: ${data.finalHP.opponent}G`;
+            }
+
+            finalResultDiv.textContent = message;
             gameOverDiv.style.display = 'flex';
             isMultiplayerMode = false;
             currentGameId = null;
