@@ -1002,6 +1002,395 @@
             color: #4fc3f7;
             margin-bottom: 10px;
         }
+
+        /* ==================== 반응형 디자인 ==================== */
+
+        /* 태블릿 (768px 이하) */
+        @media (max-width: 768px) {
+            .game-container {
+                max-width: 100%;
+                padding: 15px;
+            }
+
+            .status-bar {
+                padding: 12px 15px;
+                margin-bottom: 15px;
+            }
+
+            .gold-display {
+                font-size: 1rem;
+            }
+
+            .turn-info {
+                font-size: 0.9rem;
+            }
+
+            .bet-area {
+                gap: 10px;
+                padding: 12px;
+                margin-bottom: 8px;
+            }
+
+            .bet-label {
+                font-size: 0.9rem;
+            }
+
+            .bet-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+
+            .battle-area {
+                gap: 40px;
+                min-height: 180px;
+                margin-bottom: 12px;
+                padding: 15px;
+            }
+
+            .battle-card {
+                width: 100px;
+                height: 140px;
+                font-size: 1.5rem;
+            }
+
+            .battle-card .suit-top,
+            .battle-card .suit-bottom {
+                font-size: 0.8rem;
+            }
+
+            .battle-card .ability-tag {
+                font-size: 0.55rem;
+                bottom: 25px;
+            }
+
+            .result-message {
+                font-size: 1rem;
+                min-height: 40px;
+            }
+
+            .hand-label {
+                font-size: 1rem;
+            }
+
+            .hand {
+                height: 125px;
+            }
+
+            .card {
+                width: 70px;
+                height: 100px;
+                font-size: 1.1rem;
+            }
+
+            .card .card-suit-top,
+            .card .card-suit-bottom {
+                font-size: 0.65rem;
+            }
+
+            .card .card-ability {
+                font-size: 0.45rem;
+                bottom: 12px;
+            }
+
+            .card:hover:not(.disabled) {
+                transform: translateY(-20px) scale(1.08);
+            }
+
+            .item-area {
+                bottom: 15px;
+                right: 15px;
+                padding: 10px;
+                max-width: 200px;
+            }
+
+            .item-slot {
+                width: 55px;
+                height: 55px;
+                font-size: 1.2rem;
+            }
+
+            .mode-btn {
+                width: 180px;
+                padding: 25px 15px;
+            }
+
+            .mode-btn .mode-icon {
+                font-size: 2.5rem;
+            }
+
+            .mode-btn .mode-title {
+                font-size: 1.1rem;
+            }
+
+            .mode-btn .mode-desc {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* 모바일 (480px 이하) */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+
+            .game-container {
+                padding: 10px;
+            }
+
+            .status-bar {
+                padding: 10px;
+                margin-bottom: 10px;
+                gap: 5px;
+            }
+
+            .gold-display {
+                font-size: 0.9rem;
+            }
+
+            .turn-info {
+                font-size: 0.8rem;
+            }
+
+            .bet-area {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .bet-label {
+                width: 100%;
+                text-align: center;
+                font-size: 0.85rem;
+            }
+
+            .bet-btn {
+                padding: 7px 12px;
+                font-size: 0.85rem;
+            }
+
+            .battle-area {
+                gap: 30px;
+                min-height: 150px;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .battle-card {
+                width: 85px;
+                height: 120px;
+                font-size: 1.3rem;
+            }
+
+            .battle-card .suit-top,
+            .battle-card .suit-bottom {
+                font-size: 0.7rem;
+            }
+
+            .battle-card .ability-tag {
+                font-size: 0.5rem;
+                bottom: 20px;
+            }
+
+            .vs-text {
+                font-size: 1.5rem;
+            }
+
+            .result-message {
+                font-size: 0.9rem;
+                min-height: 35px;
+                margin-bottom: 15px;
+            }
+
+            .hand-label {
+                font-size: 0.9rem;
+                margin-bottom: 10px;
+            }
+
+            .hand {
+                height: 110px;
+            }
+
+            .card {
+                width: 60px;
+                height: 85px;
+                font-size: 1rem;
+            }
+
+            .card .card-suit-top,
+            .card .card-suit-bottom {
+                font-size: 0.6rem;
+            }
+
+            .card .card-ability {
+                font-size: 0.4rem;
+                bottom: 10px;
+            }
+
+            .card:hover:not(.disabled) {
+                transform: translateY(-15px) scale(1.05);
+            }
+
+            .item-area {
+                bottom: 10px;
+                right: 10px;
+                padding: 8px;
+                max-width: 170px;
+            }
+
+            .item-slot {
+                width: 50px;
+                height: 50px;
+                font-size: 1.1rem;
+            }
+
+            .item-slot .item-cost {
+                font-size: 0.5rem;
+            }
+
+            .ai-emotion .emotion-face {
+                font-size: 2rem;
+            }
+
+            .mode-select-overlay h1 {
+                font-size: 2rem;
+            }
+
+            .mode-select-overlay .subtitle {
+                font-size: 0.9rem;
+            }
+
+            .mode-buttons {
+                gap: 20px;
+            }
+
+            .mode-btn {
+                width: 150px;
+                padding: 20px 12px;
+            }
+
+            .mode-btn .mode-icon {
+                font-size: 2rem;
+            }
+
+            .mode-btn .mode-title {
+                font-size: 1rem;
+            }
+
+            .mode-btn .mode-desc {
+                font-size: 0.7rem;
+            }
+
+            .game-over-overlay h1 {
+                font-size: 2rem;
+            }
+
+            .game-over-overlay button {
+                padding: 12px 30px;
+                font-size: 1rem;
+            }
+        }
+
+        /* 초소형 모바일 (360px 이하) */
+        @media (max-width: 360px) {
+            .bet-btn {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+
+            .battle-area {
+                gap: 20px;
+            }
+
+            .battle-card {
+                width: 75px;
+                height: 105px;
+                font-size: 1.2rem;
+            }
+
+            .card {
+                width: 55px;
+                height: 78px;
+                font-size: 0.95rem;
+            }
+
+            .hand {
+                height: 100px;
+            }
+
+            .item-area {
+                position: fixed;
+                bottom: 5px;
+                right: 5px;
+                max-width: 150px;
+            }
+
+            .item-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
+            }
+
+            .item-slot {
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+
+            .mode-btn {
+                width: 130px;
+                padding: 15px 10px;
+            }
+        }
+
+        /* 가로 모드 (세로보다 가로가 긴 경우) */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .game-container {
+                padding: 10px;
+            }
+
+            .status-bar {
+                margin-bottom: 10px;
+                padding: 10px 15px;
+            }
+
+            .bet-area {
+                margin-bottom: 5px;
+                padding: 10px;
+            }
+
+            .battle-area {
+                min-height: 140px;
+                margin-bottom: 8px;
+                padding: 10px;
+            }
+
+            .battle-card {
+                width: 90px;
+                height: 125px;
+            }
+
+            .result-message {
+                margin-bottom: 10px;
+                min-height: 30px;
+            }
+
+            .hand-area {
+                padding: 10px;
+            }
+
+            .hand {
+                height: 100px;
+            }
+
+            .card {
+                width: 65px;
+                height: 90px;
+            }
+
+            .item-area {
+                bottom: 10px;
+                right: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1470,8 +1859,34 @@
             const handToShow = (gameMode === 'pvp' && currentPlayer === 2) ? aiHand : playerHand;
 
             const cardCount = handToShow.length;
-            const cardWidth = 80;
-            const overlapAmount = cardCount > 1 ? Math.min(50, 400 / (cardCount - 1)) : 0;
+
+            // 반응형 카드 크기 및 오버랩 계산
+            const screenWidth = window.innerWidth;
+            let cardWidth, maxOverlap, containerWidth;
+
+            if (screenWidth <= 360) {
+                // 초소형 모바일
+                cardWidth = 55;
+                maxOverlap = 35;
+                containerWidth = 300;
+            } else if (screenWidth <= 480) {
+                // 모바일
+                cardWidth = 60;
+                maxOverlap = 40;
+                containerWidth = 350;
+            } else if (screenWidth <= 768) {
+                // 태블릿
+                cardWidth = 70;
+                maxOverlap = 45;
+                containerWidth = 450;
+            } else {
+                // 데스크톱
+                cardWidth = 80;
+                maxOverlap = 50;
+                containerWidth = 500;
+            }
+
+            const overlapAmount = cardCount > 1 ? Math.min(maxOverlap, containerWidth / (cardCount - 1)) : 0;
             const totalWidth = cardWidth + (cardCount - 1) * overlapAmount;
             const startOffset = -totalWidth / 2 + cardWidth / 2;
 
@@ -2252,6 +2667,26 @@
             playerGold += 500;
             document.getElementById('player-gold').textContent = playerGold;
         }
+
+        // ==================== 반응형 리사이즈 처리 ====================
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                // 손패 다시 렌더링 (카드 크기 및 오버랩 재계산)
+                renderPlayerHand();
+                renderAiCardsBack();
+            }, 250);
+        });
+
+        // 방향 전환 감지 (모바일)
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                renderPlayerHand();
+                renderAiCardsBack();
+            }, 300);
+        });
 
     </script>
 </body>
