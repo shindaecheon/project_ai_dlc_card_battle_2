@@ -380,10 +380,14 @@ function resolveBattle(gameId) {
   game.bettingPhase = true;
   game.currentBetter = 1;
 
+  // 턴 증가
+  game.turn += 1;
+  console.log(`[GameManager] 턴 ${game.turn} 완료, 다음 턴 준비 중`);
+
   // 게임 종료 조건 확인 (HP 0 이하 또는 골드 0 이하 또는 최대 턴)
   if (game.player1.hp <= 0 || game.player2.hp <= 0 ||
       game.player1.gold <= 0 || game.player2.gold <= 0 ||
-      game.turn >= MAX_TURNS) {
+      game.turn > MAX_TURNS) {
     game.status = 'ended';
     result.gameEnded = true;
 
@@ -405,9 +409,6 @@ function resolveBattle(gameId) {
     }
 
     console.log(`[GameManager] 게임 종료: ${gameId} (승자: ${result.finalWinner === 0 ? '무승부' : '플레이어 ' + result.finalWinner})`);
-  } else {
-    game.turn += 1;
-    console.log(`[GameManager] 턴 ${game.turn} 시작`);
   }
 
   return result;
