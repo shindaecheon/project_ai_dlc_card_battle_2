@@ -802,7 +802,7 @@
         const SUIT_PRIORITY_REVERSED = { '♠': 1, '♦': 2, '♥': 3, '♣': 4 };
 
         const ABILITIES = {
-            '♠J': { name: '압박', desc: 'AI 최약 카드 강제 출전' },
+            '♠J': { name: '선제공격', desc: '내 카드 숫자 +3' },
             '♠Q': { name: '증폭', desc: '승리 시 배당금 2배' },
             '♠K': { name: '압도', desc: '무조건 승리' },
             '♦J': { name: '도둑', desc: '승리 시 1.5배' },
@@ -810,10 +810,10 @@
             '♦K': { name: '위엄', desc: '배당 2배 적용' },
             '♥J': { name: '회피', desc: '패배 시 골드 보호' },
             '♥Q': { name: '치유', desc: '+100G 회복' },
-            '♥K': { name: '처형', desc: 'AI 골드≤300 즉시 파산' },
-            '♣J': { name: '교란', desc: '문양 우선순위 역전' },
-            '♣Q': { name: '매혹', desc: 'AI 최약 카드 강제' },
-            '♣K': { name: '봉쇄', desc: 'AI 능력 봉인' },
+            '♥K': { name: '처형', desc: '상대 골드≤300 즉시 파산' },
+            '♣J': { name: '반격', desc: '패배 시 손실 50% 회수' },
+            '♣Q': { name: '혼란', desc: '문양 우선순위 역전' },
+            '♣K': { name: '봉쇄', desc: '상대 능력 봉인' },
         };
 
         const ITEMS = [
@@ -1273,20 +1273,6 @@
             const playerCard = playerHand[index];
             const ability = getAbility(playerCard);
 
-            if (ability && playerCard.suit === '♣' && playerCard.rank === 'Q') {
-                const sorted = aiHand
-                    .map((card, i) => ({ card, i }))
-                    .sort((a, b) => a.card.value - b.card.value);
-                forcedAiIndex = sorted[0].i;
-            }
-
-            if (ability && playerCard.suit === '♠' && playerCard.rank === 'J') {
-                const sorted = aiHand
-                    .map((card, i) => ({ card, i }))
-                    .sort((a, b) => a.card.value - b.card.value);
-                forcedAiIndex = sorted[0].i;
-            }
-
             isPlaying = false;
             playerHand.splice(index, 1);
             resolveCardPlay(playerCard, null);
@@ -1390,7 +1376,7 @@
             if (ability && ability.name === '위엄') {
                 effectiveBet = currentBet * 2;
             }
-            if (ability && ability.name === '교란') {
+            if (ability && ability.name === '혼란') {
                 suitReversed = true;
             }
             if (ability && ability.name === '회피') {
@@ -1414,6 +1400,11 @@
                 return;
             }
 
+            let boostedPlayerCard = { ...playerCard };
+            if (ability && ability.name === '선제공격') {
+                boostedPlayerCard.value = playerCard.value + 3;
+            }
+
             let isOverwhelm = ability && ability.name === '압도';
             let isReversed = currentEvent && currentEvent.id === 'reverse';
             let winner;
@@ -1425,13 +1416,13 @@
                     winner = 'player';
                 }
             } else if (isReversed) {
-                if (playerCard.rank === 'A' && ['J', 'Q', 'K'].includes(aiCard.rank)) {
+                if (boostedPlayerCard.rank === 'A' && ['J', 'Q', 'K'].includes(aiCard.rank)) {
                     winner = 'player';
-                } else if (aiCard.rank === 'A' && ['J', 'Q', 'K'].includes(playerCard.rank)) {
+                } else if (aiCard.rank === 'A' && ['J', 'Q', 'K'].includes(boostedPlayerCard.rank)) {
                     winner = 'ai';
-                } else if (playerCard.value < aiCard.value) {
+                } else if (boostedPlayerCard.value < aiCard.value) {
                     winner = 'player';
-                } else if (playerCard.value > aiCard.value) {
+                } else if (boostedPlayerCard.value > aiCard.value) {
                     winner = 'ai';
                 } else {
                     const priority = suitReversed ? SUIT_PRIORITY_REVERSED : SUIT_PRIORITY;
@@ -1440,7 +1431,7 @@
                     else winner = 'draw';
                 }
             } else {
-                winner = determineWinner(playerCard, aiCard, suitReversed);
+                winner = determineWinner(boostedPlayerCard, aiCard, suitReversed);
             }
 
             const resultEl = document.getElementById('result-message');
@@ -1480,6 +1471,12 @@
                     let loseMultiplier = (currentEvent && currentEvent.id === 'poison') ? 2 : 1;
                     if (activeItem === 'coin') loseMultiplier = 3;
                     goldLost = Math.floor(effectiveBet * loseMultiplier);
+
+                    if (ability && ability.name === '반격') {
+                        let refund = Math.floor(goldLost * 0.5);
+                        goldLost -= refund;
+                    }
+
                     playerGold -= goldLost;
                     aiGold += goldLost;
                 }
@@ -1494,6 +1491,7 @@
                     ? `패배!${abilityText} 보호됨! 골드 손실 없음`
                     : `패배!${abilityText}`;
                 if (!playerProtected && !isFreePlay) msg += ` | -${goldLost}G`;
+                if (ability && ability.name === '반격' && !playerProtected) msg += ' [반격 50% 회수]';
                 if (currentEvent && currentEvent.id === 'poison' && !playerProtected) msg += ' [독안개]';
                 if (activeItem === 'shield') msg += ' [방패]';
                 if (activeItem === 'coin') msg += ' [주화 3배]';
