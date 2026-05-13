@@ -233,6 +233,13 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // 상대방이 감당할 수 있는 최대 금액 체크
+    const maxBet = Math.min(player.gold, opponent.gold);
+    if (betAmount > maxBet) {
+      socket.emit('error', { message: `최대 ${maxBet}G까지만 배팅할 수 있습니다 (상대방 골드: ${opponent.gold}G)` });
+      return;
+    }
+
     // 상대 배팅보다 낮으면 안 됨 (레이즈만 가능)
     if (opponent.currentBet > 0 && betAmount < opponent.currentBet) {
       socket.emit('error', { message: `최소 ${opponent.currentBet}G 이상 배팅해야 합니다` });

@@ -391,21 +391,42 @@ function resolveBattle(gameId) {
     game.status = 'ended';
     result.gameEnded = true;
 
-    // 최종 승자 결정
-    if (game.player1.gold <= 0 && game.player2.gold > 0) {
-      result.finalWinner = 2; // 플레이어 1 파산
-    } else if (game.player2.gold <= 0 && game.player1.gold > 0) {
-      result.finalWinner = 1; // 플레이어 2 파산
+    console.log(`[GameManager] 게임 종료 조건 감지 - P1 HP: ${game.player1.hp}, P1 Gold: ${game.player1.gold}, P2 HP: ${game.player2.hp}, P2 Gold: ${game.player2.gold}, Turn: ${game.turn}`);
+
+    // 최종 승자 결정 (파산이 최우선)
+    if (game.player1.gold <= 0 && game.player2.gold <= 0) {
+      // 양쪽 다 파산 (동시) - 무승부
+      result.finalWinner = 0;
+      console.log(`[GameManager] 양쪽 동시 파산 → 무승부`);
+    } else if (game.player1.gold <= 0) {
+      // 플레이어 1 파산
+      result.finalWinner = 2;
+      console.log(`[GameManager] 플레이어 1 파산 → 플레이어 2 승리`);
+    } else if (game.player2.gold <= 0) {
+      // 플레이어 2 파산
+      result.finalWinner = 1;
+      console.log(`[GameManager] 플레이어 2 파산 → 플레이어 1 승리`);
+    } else if (game.player1.hp <= 0 && game.player2.hp > 0) {
+      result.finalWinner = 2;
+      console.log(`[GameManager] 플레이어 1 HP 0 → 플레이어 2 승리`);
+    } else if (game.player2.hp <= 0 && game.player1.hp > 0) {
+      result.finalWinner = 1;
+      console.log(`[GameManager] 플레이어 2 HP 0 → 플레이어 1 승리`);
     } else if (game.player1.hp > game.player2.hp) {
       result.finalWinner = 1;
+      console.log(`[GameManager] HP 비교 → 플레이어 1 승리 (${game.player1.hp} vs ${game.player2.hp})`);
     } else if (game.player2.hp > game.player1.hp) {
       result.finalWinner = 2;
+      console.log(`[GameManager] HP 비교 → 플레이어 2 승리 (${game.player2.hp} vs ${game.player1.hp})`);
     } else if (game.player1.gold > game.player2.gold) {
       result.finalWinner = 1;
+      console.log(`[GameManager] 골드 비교 → 플레이어 1 승리 (${game.player1.gold}G vs ${game.player2.gold}G)`);
     } else if (game.player2.gold > game.player1.gold) {
       result.finalWinner = 2;
+      console.log(`[GameManager] 골드 비교 → 플레이어 2 승리 (${game.player1.gold}G vs ${game.player2.gold}G)`);
     } else {
       result.finalWinner = 0; // 무승부
+      console.log(`[GameManager] 모든 조건 동일 → 무승부`);
     }
 
     console.log(`[GameManager] 게임 종료: ${gameId} (승자: ${result.finalWinner === 0 ? '무승부' : '플레이어 ' + result.finalWinner})`);
