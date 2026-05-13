@@ -159,17 +159,40 @@ io.on('connection', (socket) => {
       io.to(match.player1).emit('game:start', {
         gameId,
         hand: game.player1.hand,
+        gold: game.player1.gold,
         isFirstPlayer: true
       });
       io.to(match.player2).emit('game:start', {
         gameId,
         hand: game.player2.hand,
+        gold: game.player2.gold,
         isFirstPlayer: false
       });
 
       // 첫 턴 타이머 시작
       startTurnTimer(gameId);
     }
+  });
+
+  // 배팅 선택
+  socket.on('bet:select', (data) => {
+    const { gameId, betAmount } = data;
+    console.log(`[Server] ${socket.id} 배팅: ${betAmount}G`);
+
+    const game = gameManager.getGame(gameId);
+    if (!game) return;
+
+    // 플레이어 식별 및 배팅 저장
+    const player = game.player1.socketId === socket.id ? game.player1 : game.player2;
+
+    // 골드 부족 체크
+    if (player.gold < betAmount) {
+      socket.emit('error', { message: '골드가 부족합니다' });
+      return;
+    }
+
+    player.currentBet = betAmount;
+    socket.emit('bet:confirmed', { betAmount });
   });
 
   // 카드 제출

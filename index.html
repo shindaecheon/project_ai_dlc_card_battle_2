@@ -1870,6 +1870,35 @@
         function selectBet(amount) {
             if (betSelected) return;
 
+            // 멀티플레이어 모드
+            if (isMultiplayerMode) {
+                if (playerGold < amount) {
+                    alert(`골드가 부족합니다! (필요: ${amount}G, 보유: ${playerGold}G)`);
+                    return;
+                }
+
+                currentBet = amount;
+                betSelected = true;
+                isPlaying = true;
+
+                // 서버에 배팅 전송
+                socket.emit('bet:select', {
+                    gameId: currentGameId,
+                    betAmount: amount
+                });
+
+                document.querySelectorAll('.bet-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                    if (parseInt(btn.dataset.bet) === amount) {
+                        btn.classList.add('selected');
+                    }
+                });
+
+                console.log('[Client] 배팅 선택:', amount);
+                return;
+            }
+
+            // 일반 모드 (기존 로직)
             // 골드 부족 체크 및 상점 추천
             if (playerGold < amount) {
                 const goToShop = confirm(
@@ -2796,8 +2825,10 @@
         let socket = null;
         let currentGameId = null;
         let isMultiplayerMode = false;
-        let playerHP = 10;
-        let opponentHP = 10;
+        let playerGold = 1000;
+        let opponentGold = 1000;
+        let betSelected = false;
+        let currentBet = 0;
 
         function initWebSocket() {
             // CloudFront/프록시 환경 호환성을 위한 옵션
@@ -2829,11 +2860,11 @@
                 // 멀티플레이어용 UI 조정
                 document.getElementById('ai-emotion').style.display = 'none';
                 document.querySelector('.item-area').style.display = 'none';
-                document.querySelector('.bet-area').style.display = 'none';
+                document.querySelector('.bet-area').style.display = 'flex'; // 배팅 영역 표시
 
-                // 골드 표시를 HP 표시로 변경
-                document.querySelector('.player-status .gold-display').innerHTML = '♥ 플레이어 HP: <span id="player-gold">10</span>';
-                document.querySelector('.ai-status .gold-display').innerHTML = '♥ 상대 HP: <span id="ai-gold">10</span>';
+                // 골드 표시 업데이트
+                document.querySelector('.player-status .gold-display').innerHTML = '💰 플레이어: <span id="player-gold">' + data.gold + '</span> G';
+                document.querySelector('.ai-status .gold-display').innerHTML = '💰 상대: <span id="ai-gold">' + data.gold + '</span> G';
 
                 // 상점 버튼 숨기기
                 const shopButtons = document.querySelectorAll('button[onclick="openShop()"]');
@@ -2848,9 +2879,11 @@
 
                 // 서버에서 받은 패로 게임 초기화
                 playerHand = data.hand;
+                playerGold = data.gold;
+                opponentGold = data.gold;
                 turn = 1;
-                playerHP = 10;
-                opponentHP = 10;
+                betSelected = false;
+                currentBet = 0;
                 updateUIMultiplayer();
                 renderPlayerHand();
             });
@@ -2863,6 +2896,11 @@
                     timerDisplay.style.display = 'block';
                     timerValue.textContent = data.remainingTime;
                 }
+            });
+
+            // 배팅 확인
+            socket.on('bet:confirmed', (data) => {
+                console.log('[Client] 배팅 확인:', data.betAmount);
             });
 
             // 상대 대기 중
@@ -2890,16 +2928,31 @@
                     playerHand.splice(cardIndex, 1);
                 }
 
-                // HP 업데이트
-                playerHP = data.newHP.player;
-                opponentHP = data.newHP.opponent;
+                // 골드 업데이트
+                playerGold = data.player1Gold || data.player2Gold;
+                opponentGold = data.player2Gold || data.player1Gold;
 
-                // HP 표시 업데이트
-                document.getElementById('player-gold').textContent = playerHP;
-                document.getElementById('ai-gold').textContent = opponentHP;
+                // 골드 표시 업데이트
+                document.getElementById('player-gold').textContent = playerGold;
+                document.getElementById('ai-gold').textContent = opponentGold;
+
+                // 능력 발동 표시
+                if (data.abilities && data.abilities.length > 0) {
+                    data.abilities.forEach(abilityInfo => {
+                        const playerLabel = abilityInfo.player === 1 ? '플레이어' : '상대';
+                        showAbilityNotice(`${playerLabel}: ${abilityInfo.ability} - ${abilityInfo.desc}`, 'info');
+                    });
+                }
 
                 // 배틀 결과 표시
                 showBattleResultMultiplayer(data);
+
+                // 배팅 초기화
+                betSelected = false;
+                currentBet = 0;
+                document.querySelectorAll('.bet-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
 
                 // 다음 턴 준비
                 turn++;
@@ -2907,7 +2960,7 @@
 
                 // 다음 턴을 위해 isPlaying 재활성화
                 setTimeout(() => {
-                    isPlaying = true;
+                    isPlaying = false; // 배팅 먼저 해야 함
                     renderPlayerHand();
                 }, 2500);
             });
