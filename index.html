@@ -3039,6 +3039,12 @@
             } else if (type === 'action') {
                 statusDiv.style.backgroundColor = '#4caf50';
                 statusDiv.style.color = 'white';
+            } else if (type === 'win') {
+                statusDiv.style.backgroundColor = '#4caf50'; // 초록색
+                statusDiv.style.color = 'white';
+            } else if (type === 'lose') {
+                statusDiv.style.backgroundColor = '#f44336'; // 빨간색
+                statusDiv.style.color = 'white';
             } else if (type === 'result') {
                 statusDiv.style.backgroundColor = '#2196f3';
                 statusDiv.style.color = 'white';
@@ -3415,9 +3421,9 @@
 
             // 상태 메시지도 업데이트
             if (iWon) {
-                showGameStatus(`🎉 라운드 승리! +${currentBet}G`, 'result');
+                showGameStatus(`🎉 라운드 승리! +${currentBet}G`, 'win');
             } else if (iLost) {
-                showGameStatus(`😢 라운드 패배 -${currentBet}G`, 'result');
+                showGameStatus(`😢 라운드 패배 -${currentBet}G`, 'lose');
             } else {
                 showGameStatus(`🤝 무승부`, 'result');
             }
