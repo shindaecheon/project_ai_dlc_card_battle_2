@@ -2989,6 +2989,7 @@
 
             // 턴 결과
             socket.on('turn:result', (data) => {
+                alert('🔔 turn:result 이벤트 수신!');
                 console.log('[Client] ✅✅✅ turn:result 수신 ✅✅✅');
                 console.log('[Client] 턴 결과:', data);
 
