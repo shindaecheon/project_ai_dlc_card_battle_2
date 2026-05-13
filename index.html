@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>카드 배틀</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -132,108 +130,6 @@
             color: #333;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             position: relative;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .battle-card.appear {
-            animation: cardAppear 0.5s ease-out;
-        }
-
-        .battle-card.winner {
-            animation: cardWin 0.6s ease-in-out;
-            box-shadow: 0 0 30px rgba(76, 175, 80, 0.8);
-        }
-
-        .battle-card.loser {
-            animation: cardLose 0.6s ease-in-out;
-            opacity: 0.6;
-        }
-
-        @keyframes cardAppear {
-            0% {
-                transform: scale(0.3) translateY(-50px);
-                opacity: 0;
-            }
-            60% {
-                transform: scale(1.1) translateY(0);
-            }
-            100% {
-                transform: scale(1) translateY(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes cardWin {
-            0%, 100% {
-                transform: scale(1) rotate(0deg);
-            }
-            25% {
-                transform: scale(1.15) rotate(-5deg);
-            }
-            50% {
-                transform: scale(1.15) rotate(5deg);
-            }
-            75% {
-                transform: scale(1.15) rotate(-5deg);
-            }
-        }
-
-        @keyframes cardLose {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            25% {
-                transform: translateY(-10px);
-            }
-            50% {
-                transform: translateY(0);
-            }
-            75% {
-                transform: translateY(-5px);
-            }
-        }
-
-        .battle-card.card-back {
-            width: 120px;
-            height: 170px;
-            background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 50%, #2a2a2a 100%);
-            border: 3px solid #4a4a4a;
-            border-radius: 10px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 4px 15px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .battle-card.card-back::before {
-            content: '🂠';
-            font-size: 5rem;
-            color: #5a5a5a;
-        }
-
-        .battle-card.flip {
-            animation: cardFlip 0.6s ease-in-out;
-        }
-
-        @keyframes cardFlip {
-            0% {
-                transform: rotateY(0deg) scale(1);
-            }
-            50% {
-                transform: rotateY(90deg) scale(1.1);
-                opacity: 0;
-            }
-            51% {
-                transform: rotateY(90deg) scale(1.1);
-                opacity: 0;
-            }
-            52% {
-                transform: rotateY(90deg) scale(1.1);
-                opacity: 1;
-            }
-            100% {
-                transform: rotateY(180deg) scale(1);
-            }
         }
 
         .battle-card.red { color: #d32f2f; }
@@ -272,6 +168,48 @@
             box-shadow: none;
         }
 
+        .battle-card.card-back {
+            background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 50%, #2a2a2a 100%);
+            border-radius: 10px;
+        }
+
+        .battle-card.appear {
+            animation: cardAppear 0.5s ease-out;
+        }
+
+        .battle-card.winner {
+            animation: cardWin 0.6s ease-in-out;
+        }
+
+        .battle-card.loser {
+            animation: cardLose 0.6s ease-in-out;
+        }
+
+        .battle-card.flip {
+            animation: cardFlip 0.6s ease-in-out;
+        }
+
+        @keyframes cardAppear {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes cardWin {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); box-shadow: 0 0 20px rgba(76, 175, 80, 0.6); }
+        }
+
+        @keyframes cardLose {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        @keyframes cardFlip {
+            0% { transform: rotateY(0deg); }
+            50% { transform: rotateY(90deg); }
+            100% { transform: rotateY(0deg); }
+        }
+
         .battle-label {
             text-align: center;
         }
@@ -290,14 +228,12 @@
 
         .result-message {
             text-align: center;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: bold;
             margin-bottom: 20px;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            min-height: 50px;
+            line-height: 1.4;
+            padding: 5px;
             opacity: 0;
             transform: translateY(-10px);
             transition: opacity 0.3s ease, transform 0.3s ease;
@@ -310,48 +246,9 @@
         }
 
         @keyframes resultBounce {
-            0% {
-                transform: scale(0.8) translateY(-20px);
-                opacity: 0;
-            }
-            50% {
-                transform: scale(1.1) translateY(0);
-            }
-            100% {
-                transform: scale(1) translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .result-message .result-icon {
-            font-size: 2rem;
-            display: inline-block;
-            animation: iconSpin 0.5s ease-out;
-        }
-
-        @keyframes iconSpin {
-            0% {
-                transform: rotate(-180deg) scale(0);
-            }
-            100% {
-                transform: rotate(0) scale(1);
-            }
-        }
-
-        .result-message .result-text {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .result-message .main-text {
-            font-size: 1.5rem;
-        }
-
-        .result-message .sub-text {
-            font-size: 1rem;
-            opacity: 0.9;
+            0% { transform: translateY(-20px); opacity: 0; }
+            60% { transform: translateY(5px); opacity: 1; }
+            100% { transform: translateY(0); }
         }
 
         .result-message.win { color: #4fc3f7; }
@@ -372,45 +269,17 @@
             color: #ffd54f;
         }
 
-        .bet-guide {
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #ffd54f;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: rgba(255, 213, 79, 0.1);
-            border: 2px dashed #ffd54f;
-            border-radius: 12px;
-            animation: guidePulse 2s ease-in-out infinite;
-        }
-
-        .bet-guide.hidden {
-            display: none;
-        }
-
-        @keyframes guidePulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.6;
-            }
-        }
-
         .hand {
             display: flex;
             flex-wrap: nowrap;
             justify-content: center;
-            align-items: center;
-            padding: 5px 20px;
             position: relative;
             height: 145px;
         }
 
         .card {
+            position: absolute;
             width: 80px;
-            min-width: 80px;
             height: 115px;
             border-radius: 8px;
             background: #fff;
@@ -423,10 +292,23 @@
             font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: absolute;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             border: 2px solid transparent;
-            flex-shrink: 0;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: linear-gradient(45deg, #C0C0C0, #E8E8E8, #C0C0C0);
+            border-radius: 10px;
+            opacity: 0;
+            filter: blur(8px);
+            z-index: -1;
+            transition: opacity 0.3s ease;
         }
 
         .card:hover:not(.disabled) {
@@ -436,33 +318,14 @@
             z-index: 100;
         }
 
-        .card::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #C0C0C0, #E8E8E8, #C0C0C0);
-            border-radius: 10px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: -1;
-            filter: blur(8px);
-        }
-
         .card:hover::before {
             opacity: 0.7;
             animation: glowPulse 1.5s ease-in-out infinite;
         }
 
         @keyframes glowPulse {
-            0%, 100% {
-                opacity: 0.7;
-            }
-            50% {
-                opacity: 0.9;
-            }
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.4; }
         }
 
         .card.red { color: #d32f2f; }
@@ -527,8 +390,9 @@
 
         .card.disabled {
             opacity: 1;
-            cursor: not-allowed;
             filter: grayscale(0.3);
+            cursor: not-allowed;
+            transform: none !important;
         }
 
         .game-over-overlay {
@@ -896,6 +760,248 @@
             50% { transform: scale(1.05); }
             100% { transform: scale(1); opacity: 1; }
         }
+
+        /* 상점 UI */
+        .shop-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .shop-overlay.active {
+            display: flex;
+        }
+
+        .shop-container {
+            background: linear-gradient(135deg, #1a5c2a, #2d7a3e);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+            border: 3px solid #ffd700;
+        }
+
+        .shop-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .shop-header h1 {
+            font-size: 2.5rem;
+            color: #ffd700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .shop-header .current-gold {
+            font-size: 1.3rem;
+            color: #4fc3f7;
+            font-weight: bold;
+        }
+
+        .shop-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .shop-tab {
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .shop-tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .shop-tab.active {
+            background: #ffd700;
+            color: #333;
+        }
+
+        .shop-content {
+            display: none;
+        }
+
+        .shop-content.active {
+            display: block;
+        }
+
+        .gold-packages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .package-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #ffd700;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .package-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+            border-color: #ffed4e;
+        }
+
+        .package-card.recommended {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .package-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff6b6b;
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .package-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .package-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .package-gold {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4fc3f7;
+            margin-bottom: 5px;
+        }
+
+        .package-bonus {
+            font-size: 0.9rem;
+            color: #66ff66;
+            margin-bottom: 10px;
+        }
+
+        .package-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            background: rgba(255, 215, 0, 0.2);
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .package-buy-btn {
+            background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .package-buy-btn:hover {
+            background: linear-gradient(135deg, #29b6f6, #039be5);
+            transform: scale(1.05);
+        }
+
+        .shop-close-btn {
+            display: block;
+            margin: 30px auto 0;
+            padding: 12px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .shop-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .premium-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .item-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #9c27b0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(156, 39, 176, 0.4);
+        }
+
+        .item-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .item-card-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ba68c8;
+            margin-bottom: 8px;
+        }
+
+        .item-card-desc {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            min-height: 40px;
+        }
+
+        .item-card-price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #4fc3f7;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -919,6 +1025,9 @@
                 <div class="mode-desc">매 턴 랜덤 이벤트!<br>혼돈의 AI 대전</div>
             </div>
         </div>
+        <button onclick="openShop()" style="margin-top: 20px; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ffed4e); color: #333; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);">
+            🛒 골드 상점
+        </button>
     </div>
 
     <div class="game-container" id="game-container" style="display:none">
@@ -988,6 +1097,129 @@
         <p>AI가 낼 카드:</p>
         <div class="peek-card" id="peek-card"></div>
         <p>이제 카드를 선택하세요</p>
+    </div>
+
+    <!-- 상점 오버레이 -->
+    <div class="shop-overlay" id="shop-overlay">
+        <div class="shop-container">
+            <div class="shop-header">
+                <h1>🛒 골드 상점</h1>
+                <div class="current-gold">보유 골드: <span id="shop-current-gold">1000</span> G</div>
+            </div>
+
+            <div class="shop-tabs">
+                <button class="shop-tab active" onclick="switchShopTab('gold')">💰 골드 패키지</button>
+                <button class="shop-tab" onclick="switchShopTab('premium')">⭐ 프리미엄 아이템</button>
+            </div>
+
+            <!-- 골드 패키지 탭 -->
+            <div class="shop-content active" id="shop-gold">
+                <div class="gold-packages">
+                    <div class="package-card" onclick="buyGoldPackage('starter')">
+                        <div class="package-badge">1회 한정</div>
+                        <div class="package-icon">🎁</div>
+                        <div class="package-name">스타터 팩</div>
+                        <div class="package-gold">1,000G</div>
+                        <div class="package-bonus">+200G 보너스</div>
+                        <div class="package-price">$0.99</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+
+                    <div class="package-card" onclick="buyGoldPackage('small')">
+                        <div class="package-icon">💰</div>
+                        <div class="package-name">소량 패키지</div>
+                        <div class="package-gold">2,500G</div>
+                        <div class="package-bonus">+500G 보너스</div>
+                        <div class="package-price">$1.99</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+
+                    <div class="package-card recommended" onclick="buyGoldPackage('medium')">
+                        <div class="package-badge">인기</div>
+                        <div class="package-icon">💎</div>
+                        <div class="package-name">일반 패키지</div>
+                        <div class="package-gold">6,000G</div>
+                        <div class="package-bonus">+1,500G 보너스</div>
+                        <div class="package-price">$4.99</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+
+                    <div class="package-card recommended" onclick="buyGoldPackage('large')">
+                        <div class="package-badge">최고가치</div>
+                        <div class="package-icon">💸</div>
+                        <div class="package-name">대량 패키지</div>
+                        <div class="package-gold">15,000G</div>
+                        <div class="package-bonus">+5,000G 보너스</div>
+                        <div class="package-price">$9.99</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+
+                    <div class="package-card" onclick="buyGoldPackage('mega')">
+                        <div class="package-icon">💵</div>
+                        <div class="package-name">메가 패키지</div>
+                        <div class="package-gold">40,000G</div>
+                        <div class="package-bonus">+15,000G 보너스</div>
+                        <div class="package-price">$19.99</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 프리미엄 아이템 탭 -->
+            <div class="shop-content" id="shop-premium">
+                <div class="premium-items">
+                    <div class="item-card" onclick="buyPremiumItem('vip-pack')">
+                        <div class="item-card-icon">🎴</div>
+                        <div class="item-card-name">VIP 카드팩</div>
+                        <div class="item-card-desc">에픽 카드 1장 + 레어 카드 2장 보장</div>
+                        <div class="item-card-price">3,000G</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+
+                    <div class="item-card" onclick="buyPremiumItem('legendary-pack')">
+                        <div class="item-card-icon">👑</div>
+                        <div class="item-card-name">레전더리 카드팩</div>
+                        <div class="item-card-desc">레전더리 카드 1장 보장</div>
+                        <div class="item-card-price">8,000G</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+
+                    <div class="item-card" onclick="buyPremiumItem('skin')">
+                        <div class="item-card-icon">🎨</div>
+                        <div class="item-card-name">프리미엄 스킨</div>
+                        <div class="item-card-desc">독점 카드 디자인 스킨</div>
+                        <div class="item-card-price">2,000~5,000G</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+
+                    <div class="item-card" onclick="buyPremiumItem('gold-booster')">
+                        <div class="item-card-icon">⚡</div>
+                        <div class="item-card-name">골드 부스터 (7일)</div>
+                        <div class="item-card-desc">골드 획득량 +50% 증가</div>
+                        <div class="item-card-price">3,000G</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+
+                    <div class="item-card" onclick="buyPremiumItem('deck-slot')">
+                        <div class="item-card-icon">📦</div>
+                        <div class="item-card-name">덱 슬롯 확장</div>
+                        <div class="item-card-desc">추가 덱 슬롯 1개</div>
+                        <div class="item-card-price">2,000G</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+
+                    <div class="item-card" onclick="buyPremiumItem('emoji')">
+                        <div class="item-card-icon">😎</div>
+                        <div class="item-card-name">이모티콘 팩</div>
+                        <div class="item-card-desc">특별 이모티콘 5종</div>
+                        <div class="item-card-price">500~1,500G</div>
+                        <button class="package-buy-btn">구매하기</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="shop-close-btn" onclick="closeShop()">닫기</button>
+        </div>
     </div>
 
     <script>
@@ -1139,13 +1371,11 @@
             updateAiEmotion();
             clearBattle();
             renderItems();
-            const resultEl = document.getElementById('result-message');
-            resultEl.textContent = '';
-            resultEl.className = 'result-message';
-            resultEl.classList.remove('show');
+            document.getElementById('result-message').textContent = '';
+            document.getElementById('result-message').className = 'result-message';
             document.getElementById('ability-notice').textContent = '';
             document.getElementById('item-active-notice').textContent = '';
-            document.getElementById('hand-label').textContent = '💰 배당금을 선택하세요';
+            document.getElementById('hand-label').textContent = '배당액을 먼저 선택하세요';
             updateBetButtons();
         }
 
@@ -1166,7 +1396,7 @@
 
             triggerWildEvent();
 
-            const label = gameMode === 'pvp' ? '플레이어 1 패 (카드를 클릭하여 제출)' : '✨ 카드를 선택하세요! ✨';
+            const label = gameMode === 'pvp' ? '플레이어 1 패 (카드를 클릭하여 제출)' : '내 패 (카드를 클릭하여 제출)';
             document.getElementById('hand-label').textContent = label;
             renderPlayerHand();
         }
@@ -1205,8 +1435,6 @@
                 const colorClass = SUIT_COLORS[card.suit];
                 const canPlay = isPlaying && betSelected;
                 cardEl.className = `card ${colorClass}${!canPlay ? ' disabled' : ''}`;
-                cardEl.style.left = `calc(50% + ${startOffset + index * overlapAmount}px)`;
-                cardEl.style.zIndex = index;
 
                 const ability = getAbility(card);
                 const abilityHtml = ability ? `<span class="card-ability">${ability.name}</span>` : '';
@@ -1219,6 +1447,10 @@
                     ${abilityHtml}
                     ${tooltipHtml}
                 `;
+
+                cardEl.style.left = `calc(50% + ${startOffset + index * overlapAmount}px)`;
+                cardEl.style.zIndex = index;
+
                 if (canPlay) {
                     cardEl.addEventListener('click', () => playCard(index));
                     cardEl.addEventListener('mouseenter', () => {
@@ -1247,62 +1479,21 @@
             const aiBattle = document.getElementById('ai-battle-card');
             playerBattle.className = 'battle-card empty';
             playerBattle.innerHTML = '?';
-            // AI 카드는 뒷면으로 초기화
             aiBattle.className = 'battle-card card-back';
             aiBattle.innerHTML = '';
         }
 
-        function renderBattleCard(element, card, isWinner = null, withFlip = false) {
+        function renderBattleCard(element, card) {
             const colorClass = SUIT_COLORS[card.suit];
             const ability = getAbility(card);
             const abilityHtml = ability ? `<span class="ability-tag">${ability.name}</span>` : '';
-
-            let className = `battle-card ${colorClass} appear`;
-
-            if (withFlip) {
-                className += ' flip';
-            }
-
-            if (isWinner === true) {
-                className += ' winner';
-            } else if (isWinner === false) {
-                className += ' loser';
-            }
-
-            element.className = className;
+            element.className = `battle-card ${colorClass}`;
             element.innerHTML = `
                 <span class="suit-top">${card.suit}</span>
                 ${card.rank}
                 <span class="suit-bottom">${card.suit}</span>
                 ${abilityHtml}
             `;
-        }
-
-        function showResultMessage(type, message, subMessage) {
-            const resultEl = document.getElementById('result-message');
-            const icons = {
-                'win': '🎉',
-                'lose': '💔',
-                'draw': '🤝'
-            };
-
-            resultEl.className = `result-message ${type}`;
-            resultEl.innerHTML = `
-                <span class="result-icon">${icons[type]}</span>
-                <div class="result-text">
-                    <div class="main-text">${message}</div>
-                    <div class="sub-text">${subMessage}</div>
-                </div>
-            `;
-
-            setTimeout(() => {
-                resultEl.classList.add('show');
-            }, 50);
-        }
-
-        function hideResultMessage() {
-            const resultEl = document.getElementById('result-message');
-            resultEl.classList.remove('show');
         }
 
         function determineWinner(playerCard, aiCard, suitReversed) {
@@ -1610,17 +1801,14 @@
                 aiGold -= effectiveBet;
                 resultEl.textContent = `플레이어 1 승리! | +${effectiveBet}G`;
                 resultEl.className = 'result-message win';
-                setTimeout(() => resultEl.classList.add('show'), 50);
             } else if (winner === 'ai') {
                 playerGold -= effectiveBet;
                 aiGold += effectiveBet;
                 resultEl.textContent = `플레이어 2 승리! | +${effectiveBet}G`;
                 resultEl.className = 'result-message lose';
-                setTimeout(() => resultEl.classList.add('show'), 50);
             } else {
                 resultEl.textContent = '무승부! 변동 없음';
                 resultEl.className = 'result-message draw';
-                setTimeout(() => resultEl.classList.add('show'), 50);
             }
 
             turn++;
@@ -1655,8 +1843,14 @@
             const playerBattleEl = document.getElementById('player-battle-card');
             const aiBattleEl = document.getElementById('ai-battle-card');
 
-            // 플레이어 카드 표시
-            renderBattleCard(playerBattleEl, playerCard, null, false);
+            renderBattleCard(playerBattleEl, playerCard);
+
+            setTimeout(() => {
+                aiBattleEl.classList.add('flip');
+                setTimeout(() => {
+                    renderBattleCard(aiBattleEl, aiCard);
+                }, 300);
+            }, 300);
 
             let effectiveBet = currentBet;
             let isFreePlay = false;
@@ -1745,15 +1939,6 @@
                 sealNextTurn = true;
             }
 
-            // AI 카드 뒤집기 애니메이션
-            setTimeout(() => {
-                aiBattleEl.classList.add('flip');
-                setTimeout(() => {
-                    renderBattleCard(aiBattleEl, aiCard, null, false);
-                }, 300);
-            }, 300);
-
-            // 결과 처리 (뒤집기 완료 후)
             setTimeout(() => {
                 if (winner === 'player') {
                     let goldEarned = isFreePlay ? 0 : Math.floor(effectiveBet * (doubleDamage ? 2 : 1) * betMultiplier);
@@ -1778,32 +1963,32 @@
                     resultEl.className = 'result-message win';
                     setTimeout(() => resultEl.classList.add('show'), 50);
                 } else if (winner === 'ai') {
-                let goldLost = 0;
-                if (!playerProtected && !isFreePlay) {
-                    let loseMultiplier = (currentEvent && currentEvent.id === 'poison') ? 2 : 1;
-                    if (activeItem === 'coin') loseMultiplier = 3;
-                    goldLost = Math.floor(effectiveBet * loseMultiplier);
-                    playerGold -= goldLost;
-                    aiGold += goldLost;
-                }
-                if (wildBonus > 0) {
-                    aiGold += wildBonus;
-                }
+                    let goldLost = 0;
+                    if (!playerProtected && !isFreePlay) {
+                        let loseMultiplier = (currentEvent && currentEvent.id === 'poison') ? 2 : 1;
+                        if (activeItem === 'coin') loseMultiplier = 3;
+                        goldLost = Math.floor(effectiveBet * loseMultiplier);
+                        playerGold -= goldLost;
+                        aiGold += goldLost;
+                    }
+                    if (wildBonus > 0) {
+                        aiGold += wildBonus;
+                    }
 
-                aiConsecutiveWins++;
-                aiConsecutiveLosses = 0;
+                    aiConsecutiveWins++;
+                    aiConsecutiveLosses = 0;
 
-                let msg = playerProtected
-                    ? `패배!${abilityText} 보호됨! 골드 손실 없음`
-                    : `패배!${abilityText}`;
-                if (!playerProtected && !isFreePlay) msg += ` | -${goldLost}G`;
-                if (currentEvent && currentEvent.id === 'poison' && !playerProtected) msg += ' [독안개]';
-                if (activeItem === 'shield') msg += ' [방패]';
-                if (activeItem === 'coin') msg += ' [주화 3배]';
-                if (isReversed) msg += ' [역전]';
-                resultEl.textContent = msg;
-                resultEl.className = 'result-message lose';
-                setTimeout(() => resultEl.classList.add('show'), 50);
+                    let msg = playerProtected
+                        ? `패배!${abilityText} 보호됨! 골드 손실 없음`
+                        : `패배!${abilityText}`;
+                    if (!playerProtected && !isFreePlay) msg += ` | -${goldLost}G`;
+                    if (currentEvent && currentEvent.id === 'poison' && !playerProtected) msg += ' [독안개]';
+                    if (activeItem === 'shield') msg += ' [방패]';
+                    if (activeItem === 'coin') msg += ' [주화 3배]';
+                    if (isReversed) msg += ' [역전]';
+                    resultEl.textContent = msg;
+                    resultEl.className = 'result-message lose';
+                    setTimeout(() => resultEl.classList.add('show'), 50);
                 } else {
                     aiConsecutiveLosses = 0;
                     aiConsecutiveWins = 0;
@@ -1838,7 +2023,7 @@
                 if (playerGold <= 0 || aiGold <= 0 || playerHand.length === 0) {
                     setTimeout(endGame, 1200);
                 } else {
-                    document.getElementById('hand-label').textContent = '💰 배당금을 선택하세요';
+                    document.getElementById('hand-label').textContent = '배당액을 먼저 선택하세요';
                 }
             }, 900);
         }
@@ -1875,6 +2060,139 @@
             score.textContent = '';
             const p1Label = gameMode === 'pvp' ? '플레이어1' : '플레이어';
             gold.textContent = `최종 골드 — ${p1Label}: ${playerGold}G / ${p2Name}: ${aiGold}G`;
+        }
+
+        // ==================== 상점 시스템 ====================
+
+        const GOLD_PACKAGES = {
+            starter: { gold: 1200, price: 0.99, name: '스타터 팩', oneTime: true },
+            small: { gold: 3000, price: 1.99, name: '소량 패키지' },
+            medium: { gold: 7500, price: 4.99, name: '일반 패키지' },
+            large: { gold: 20000, price: 9.99, name: '대량 패키지' },
+            mega: { gold: 55000, price: 19.99, name: '메가 패키지' }
+        };
+
+        const PREMIUM_ITEMS = {
+            'vip-pack': { name: 'VIP 카드팩', cost: 3000, type: 'gold' },
+            'legendary-pack': { name: '레전더리 카드팩', cost: 8000, type: 'gold' },
+            'skin': { name: '프리미엄 스킨', cost: 3500, type: 'gold' },
+            'gold-booster': { name: '골드 부스터 (7일)', cost: 3000, type: 'gold' },
+            'deck-slot': { name: '덱 슬롯 확장', cost: 2000, type: 'gold' },
+            'emoji': { name: '이모티콘 팩', cost: 1000, type: 'gold' }
+        };
+
+        let purchasedStarterPack = false;
+
+        function openShop() {
+            document.getElementById('shop-overlay').classList.add('active');
+            updateShopGold();
+        }
+
+        function closeShop() {
+            document.getElementById('shop-overlay').classList.remove('active');
+        }
+
+        function switchShopTab(tab) {
+            // 탭 버튼 활성화
+            document.querySelectorAll('.shop-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 탭 컨텐츠 활성화
+            document.querySelectorAll('.shop-content').forEach(content => content.classList.remove('active'));
+            if (tab === 'gold') {
+                document.getElementById('shop-gold').classList.add('active');
+            } else {
+                document.getElementById('shop-premium').classList.add('active');
+            }
+        }
+
+        function updateShopGold() {
+            document.getElementById('shop-current-gold').textContent = playerGold;
+        }
+
+        function buyGoldPackage(packageId) {
+            const pkg = GOLD_PACKAGES[packageId];
+
+            if (packageId === 'starter' && purchasedStarterPack) {
+                alert('❌ 스타터 팩은 1회만 구매 가능합니다!');
+                return;
+            }
+
+            // 테스트 환경에서는 실제 결제 없이 골드 추가
+            const confirmed = confirm(
+                `🛒 골드 구매\n\n` +
+                `패키지: ${pkg.name}\n` +
+                `골드: ${pkg.gold.toLocaleString()}G\n` +
+                `가격: $${pkg.price}\n\n` +
+                `[테스트 모드] 무료로 골드를 받으시겠습니까?`
+            );
+
+            if (confirmed) {
+                playerGold += pkg.gold;
+
+                if (packageId === 'starter') {
+                    purchasedStarterPack = true;
+                }
+
+                updateShopGold();
+                document.getElementById('player-gold').textContent = playerGold;
+
+                alert(
+                    `✅ 구매 완료!\n\n` +
+                    `${pkg.gold.toLocaleString()}G를 받았습니다!\n` +
+                    `현재 골드: ${playerGold.toLocaleString()}G`
+                );
+
+                // 실제 환경에서는 여기에 결제 API 연동
+                // processPayment(packageId, pkg.price);
+            }
+        }
+
+        function buyPremiumItem(itemId) {
+            const item = PREMIUM_ITEMS[itemId];
+
+            if (playerGold < item.cost) {
+                alert(`❌ 골드가 부족합니다!\n\n필요: ${item.cost.toLocaleString()}G\n보유: ${playerGold.toLocaleString()}G`);
+                return;
+            }
+
+            const confirmed = confirm(
+                `🛒 아이템 구매\n\n` +
+                `아이템: ${item.name}\n` +
+                `가격: ${item.cost.toLocaleString()}G\n\n` +
+                `구매하시겠습니까?`
+            );
+
+            if (confirmed) {
+                playerGold -= item.cost;
+                updateShopGold();
+                document.getElementById('player-gold').textContent = playerGold;
+
+                alert(
+                    `✅ 구매 완료!\n\n` +
+                    `${item.name}을(를) 획득했습니다!\n` +
+                    `남은 골드: ${playerGold.toLocaleString()}G`
+                );
+
+                // 실제 환경에서는 인벤토리에 아이템 추가
+                // addItemToInventory(itemId);
+            }
+        }
+
+        // 실제 결제 API 연동 함수 (향후 구현)
+        function processPayment(packageId, price) {
+            // Stripe, PayPal 등의 결제 API 연동
+            console.log(`Processing payment: ${packageId} - $${price}`);
+            // 결제 성공 시 서버에 골드 추가 요청
+            // 결제 실패 시 에러 처리
+        }
+
+        // 광고 시청 골드 획득 (향후 구현)
+        function watchAdForGold() {
+            // Google AdMob 등의 광고 SDK 연동
+            alert('📺 광고를 시청하고 500G를 받으세요! (테스트 모드)');
+            playerGold += 500;
+            document.getElementById('player-gold').textContent = playerGold;
         }
 
     </script>
