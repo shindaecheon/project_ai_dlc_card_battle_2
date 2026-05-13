@@ -2796,6 +2796,8 @@
         let socket = null;
         let currentGameId = null;
         let isMultiplayerMode = false;
+        let playerHP = 10;
+        let opponentHP = 10;
 
         function initWebSocket() {
             // CloudFront/프록시 환경 호환성을 위한 옵션
@@ -2827,11 +2829,28 @@
                 // 멀티플레이어용 UI 조정
                 document.getElementById('ai-emotion').style.display = 'none';
                 document.querySelector('.item-area').style.display = 'none';
-                document.querySelector('.ai-status .gold-display').innerHTML = '💰 상대: <span id="ai-gold">-</span> G';
+                document.querySelector('.bet-area').style.display = 'none';
+
+                // 골드 표시를 HP 표시로 변경
+                document.querySelector('.player-status .gold-display').innerHTML = '♥ 플레이어 HP: <span id="player-gold">10</span>';
+                document.querySelector('.ai-status .gold-display').innerHTML = '♥ 상대 HP: <span id="ai-gold">10</span>';
+
+                // 상점 버튼 숨기기
+                const shopButtons = document.querySelectorAll('button[onclick="openShop()"]');
+                shopButtons.forEach(btn => btn.style.display = 'none');
+
+                // AI 손패 표시를 상대 손패로 변경
+                const aiHandDisplay = document.querySelector('.ai-hand-display');
+                if (aiHandDisplay) {
+                    aiHandDisplay.textContent = '상대 남은 카드: ';
+                    aiHandDisplay.innerHTML += '<span id="ai-card-count">10</span>장';
+                }
 
                 // 서버에서 받은 패로 게임 초기화
                 playerHand = data.hand;
                 turn = 1;
+                playerHP = 10;
+                opponentHP = 10;
                 updateUIMultiplayer();
                 renderPlayerHand();
             });
@@ -2862,6 +2881,23 @@
                     timerDisplay.style.display = 'none';
                 }
 
+                // 제출한 카드를 손패에서 제거
+                const playedCard = data.playerCard;
+                const cardIndex = playerHand.findIndex(c =>
+                    c.rank === playedCard.rank && c.suit === playedCard.suit
+                );
+                if (cardIndex !== -1) {
+                    playerHand.splice(cardIndex, 1);
+                }
+
+                // HP 업데이트
+                playerHP = data.newHP.player;
+                opponentHP = data.newHP.opponent;
+
+                // HP 표시 업데이트
+                document.getElementById('player-gold').textContent = playerHP;
+                document.getElementById('ai-gold').textContent = opponentHP;
+
                 // 배틀 결과 표시
                 showBattleResultMultiplayer(data);
 
@@ -2873,7 +2909,7 @@
                 setTimeout(() => {
                     isPlaying = true;
                     renderPlayerHand();
-                }, 2000);
+                }, 2500);
             });
 
             // 게임 종료
@@ -2911,13 +2947,13 @@
 
             isPlaying = false;
 
-            // 서버에 카드 제출
+            // 서버에 카드 제출 (서버가 카드를 관리)
             socket.emit('card:submit', {
                 gameId: currentGameId,
                 cardIndex: index
             });
 
-            console.log('[Client] 카드 제출:', index);
+            console.log('[Client] 카드 제출:', playerHand[index].rank + playerHand[index].suit);
         }
 
         function showBattleResultMultiplayer(data) {
@@ -2959,6 +2995,23 @@
 
         function updateUIMultiplayer() {
             document.getElementById('turn-count').textContent = turn;
+
+            // 상대 손패 카드 카운트는 플레이어와 동일하게 감소 (서버에서 동시에 제거)
+            const aiCardCount = document.getElementById('ai-card-count');
+            if (aiCardCount) {
+                aiCardCount.textContent = playerHand.length;
+            }
+
+            // 상대 손패 카드 뒷면 표시 업데이트
+            const aiCardsBack = document.getElementById('ai-cards-back');
+            if (aiCardsBack) {
+                aiCardsBack.innerHTML = '';
+                for (let i = 0; i < playerHand.length; i++) {
+                    const cardBack = document.createElement('div');
+                    cardBack.className = 'ai-card-back';
+                    aiCardsBack.appendChild(cardBack);
+                }
+            }
         }
 
     </script>
