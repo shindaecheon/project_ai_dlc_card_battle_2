@@ -1875,14 +1875,23 @@
 
             // 멀티플레이어 모드
             if (isMultiplayerMode) {
+                if (!myTurn) {
+                    alert('상대방의 차례입니다!');
+                    return;
+                }
+
                 if (playerGold < amount) {
                     alert(`골드가 부족합니다! (필요: ${amount}G, 보유: ${playerGold}G)`);
                     return;
                 }
 
+                // 상대가 이미 배팅했으면 그보다 높아야 함
+                if (opponentBet > 0 && amount < opponentBet) {
+                    alert(`최소 ${opponentBet}G 이상 배팅해야 합니다!`);
+                    return;
+                }
+
                 currentBet = amount;
-                betSelected = true;
-                isPlaying = true;
 
                 // 서버에 배팅 전송
                 socket.emit('bet:select', {
@@ -1897,6 +1906,7 @@
                     }
                 });
 
+                myTurn = false; // 배팅 후 차례 종료
                 console.log('[Client] 배팅 선택:', amount);
                 return;
             }
@@ -2829,6 +2839,8 @@
         let currentGameId = null;
         let isMultiplayerMode = false;
         let opponentGold = 1000;
+        let opponentBet = 0;
+        let myTurn = false;
 
         function initWebSocket() {
             // CloudFront/프록시 환경 호환성을 위한 옵션
@@ -2884,9 +2896,41 @@
                 turn = 1;
                 betSelected = false;
                 currentBet = 0;
+                opponentBet = 0;
                 isPlaying = false; // 배팅 먼저 해야 함
+                myTurn = data.isFirstPlayer; // 플레이어1이 먼저 배팅
                 updateUIMultiplayer();
                 renderPlayerHand();
+
+                if (myTurn) {
+                    showAbilityNotice('당신의 차례입니다! 배팅을 선택하세요.', 'info');
+                } else {
+                    showAbilityNotice('상대방이 배팅 중입니다...', 'info');
+                }
+            });
+
+            // 배팅 확인
+            socket.on('bet:confirmed', (data) => {
+                console.log('[Client] 배팅 확인:', data.betAmount);
+                showAbilityNotice('상대방 차례...', 'info');
+            });
+
+            // 상대 배팅 정보
+            socket.on('opponent:bet', (data) => {
+                opponentBet = data.betAmount;
+                myTurn = true;
+                console.log('[Client] 상대 배팅:', data.betAmount);
+                showAbilityNotice(`상대가 ${data.betAmount}G 배팅했습니다. 당신의 차례!`, 'info');
+            });
+
+            // 배팅 완료
+            socket.on('betting:complete', (data) => {
+                console.log('[Client] 배팅 완료:', data);
+                betSelected = true;
+                isPlaying = true;
+                currentBet = data.playerBet;
+                opponentBet = data.opponentBet;
+                showAbilityNotice(`배팅 완료! (${data.playerBet}G vs ${data.opponentBet}G) 카드를 선택하세요.`, 'info');
             });
 
             // 타이머 업데이트
@@ -2951,6 +2995,8 @@
                 // 배팅 초기화
                 betSelected = false;
                 currentBet = 0;
+                opponentBet = 0;
+                myTurn = true; // 다음 턴 플레이어1부터 시작
                 document.querySelectorAll('.bet-btn').forEach(btn => {
                     btn.classList.remove('selected');
                 });
@@ -2959,10 +3005,11 @@
                 turn++;
                 updateUIMultiplayer();
 
-                // 다음 턴을 위해 isPlaying 재활성화
+                // 다음 턴을 위해 배팅부터 다시 시작
                 setTimeout(() => {
-                    isPlaying = false; // 배팅 먼저 해야 함
+                    isPlaying = false;
                     renderPlayerHand();
+                    showAbilityNotice('새 턴 시작! 배팅을 선택하세요.', 'info');
                 }, 2500);
             });
 

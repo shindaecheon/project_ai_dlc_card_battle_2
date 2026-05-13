@@ -88,6 +88,7 @@ function createGame(gameId, player1SocketId, player2SocketId) {
       hp: INITIAL_HP,
       gold: INITIAL_GOLD,
       currentBet: 0,
+      betReady: false,
       submittedCard: null
     },
     player2: {
@@ -96,10 +97,13 @@ function createGame(gameId, player1SocketId, player2SocketId) {
       hp: INITIAL_HP,
       gold: INITIAL_GOLD,
       currentBet: 0,
+      betReady: false,
       submittedCard: null
     },
     turn: 1,
     turnTimer: null,
+    bettingPhase: true,
+    currentBetter: 1, // 1 또는 2
     status: 'playing'
   };
 
@@ -369,8 +373,12 @@ function resolveBattle(gameId) {
   // 배팅 및 제출된 카드 초기화
   game.player1.currentBet = 0;
   game.player2.currentBet = 0;
+  game.player1.betReady = false;
+  game.player2.betReady = false;
   game.player1.submittedCard = null;
   game.player2.submittedCard = null;
+  game.bettingPhase = true;
+  game.currentBetter = 1;
 
   // 게임 종료 조건 확인 (HP 0 이하 또는 골드 0 이하 또는 최대 턴)
   if (game.player1.hp <= 0 || game.player2.hp <= 0 ||

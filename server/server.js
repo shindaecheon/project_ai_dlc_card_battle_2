@@ -180,10 +180,19 @@ io.on('connection', (socket) => {
     console.log(`[Server] ${socket.id} 배팅: ${betAmount}G`);
 
     const game = gameManager.getGame(gameId);
-    if (!game) return;
+    if (!game || !game.bettingPhase) return;
 
-    // 플레이어 식별 및 배팅 저장
-    const player = game.player1.socketId === socket.id ? game.player1 : game.player2;
+    // 플레이어 식별
+    const isPlayer1 = game.player1.socketId === socket.id;
+    const playerNum = isPlayer1 ? 1 : 2;
+    const player = isPlayer1 ? game.player1 : game.player2;
+    const opponent = isPlayer1 ? game.player2 : game.player1;
+
+    // 차례 체크
+    if (game.currentBetter !== playerNum) {
+      socket.emit('error', { message: '상대방의 차례입니다' });
+      return;
+    }
 
     // 골드 부족 체크
     if (player.gold < betAmount) {
@@ -191,8 +200,45 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // 상대 배팅보다 낮으면 안 됨 (레이즈만 가능)
+    if (opponent.currentBet > 0 && betAmount < opponent.currentBet) {
+      socket.emit('error', { message: `최소 ${opponent.currentBet}G 이상 배팅해야 합니다` });
+      return;
+    }
+
+    // 배팅 저장
     player.currentBet = betAmount;
-    socket.emit('bet:confirmed', { betAmount });
+    player.betReady = true;
+
+    console.log(`[Server] 플레이어 ${playerNum} 배팅: ${betAmount}G`);
+
+    // 상대에게 배팅 정보 전송
+    const opponentSocketId = opponent.socketId;
+    io.to(opponentSocketId).emit('opponent:bet', { betAmount });
+
+    // 양쪽 배팅 완료 체크
+    if (player.currentBet === opponent.currentBet && opponent.betReady) {
+      // 배팅 라운드 종료
+      game.bettingPhase = false;
+
+      io.to(game.player1.socketId).emit('betting:complete', {
+        playerBet: game.player1.currentBet,
+        opponentBet: game.player2.currentBet
+      });
+      io.to(game.player2.socketId).emit('betting:complete', {
+        playerBet: game.player2.currentBet,
+        opponentBet: game.player1.currentBet
+      });
+
+      console.log(`[Server] 배팅 완료: ${game.player1.currentBet}G vs ${game.player2.currentBet}G`);
+
+      // 턴 타이머 시작
+      startTurnTimer(gameId);
+    } else {
+      // 상대 차례로 전환
+      game.currentBetter = playerNum === 1 ? 2 : 1;
+      socket.emit('bet:confirmed', { betAmount });
+    }
   });
 
   // 카드 제출
