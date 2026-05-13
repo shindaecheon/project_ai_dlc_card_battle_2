@@ -2911,27 +2911,28 @@
 
             // 배팅 확인
             socket.on('bet:confirmed', (data) => {
-                console.log('[Client] 배팅 확인:', data.betAmount);
-                showAbilityNotice('상대방 차례...', 'info');
+                console.log('[Client] ✅ bet:confirmed 수신:', data.betAmount);
+                showAbilityNotice('배팅 완료! 상대방 차례...', 'info');
             });
 
             // 상대 배팅 정보
             socket.on('opponent:bet', (data) => {
+                console.log('[Client] ✅ opponent:bet 수신:', data.betAmount);
                 opponentBet = data.betAmount;
                 myTurn = true;
-                console.log('[Client] 상대 배팅:', data.betAmount);
-                showAbilityNotice(`상대가 ${data.betAmount}G 배팅했습니다. 당신의 차례!`, 'info');
+                showAbilityNotice(`상대가 ${data.betAmount}G 배팅! 당신의 차례입니다.`, 'info');
             });
 
             // 배팅 완료
             socket.on('betting:complete', (data) => {
-                console.log('[Client] 배팅 완료:', data);
-                console.log('[Client] isPlaying 활성화 전:', isPlaying, 'betSelected:', betSelected);
+                console.log('[Client] ✅ betting:complete 수신:', data);
+                console.log('[Client] 현재 상태 - isPlaying:', isPlaying, 'betSelected:', betSelected);
                 betSelected = true;
                 isPlaying = true;
                 currentBet = data.playerBet;
                 opponentBet = data.opponentBet;
-                console.log('[Client] isPlaying 활성화 후:', isPlaying, 'betSelected:', betSelected);
+                console.log('[Client] 활성화 완료 - isPlaying:', isPlaying, 'betSelected:', betSelected);
+                alert(`✅ 배팅 완료!\n내: ${data.playerBet}G\n상대: ${data.opponentBet}G\n\n카드를 선택하세요!`);
                 showAbilityNotice(`배팅 완료! (내: ${data.playerBet}G vs 상대: ${data.opponentBet}G) 카드를 선택하세요!`, 'info');
             });
 

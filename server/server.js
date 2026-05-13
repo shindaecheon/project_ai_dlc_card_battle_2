@@ -215,6 +215,7 @@ io.on('connection', (socket) => {
     // 상대에게 배팅 정보 전송
     const opponentSocketId = opponent.socketId;
     io.to(opponentSocketId).emit('opponent:bet', { betAmount });
+    console.log(`[Server] opponent:bet 전송 → ${opponentSocketId}: ${betAmount}G`);
 
     // 양쪽 배팅 완료 체크
     if (player.currentBet === opponent.currentBet && opponent.betReady) {
@@ -230,7 +231,7 @@ io.on('connection', (socket) => {
         opponentBet: game.player1.currentBet
       });
 
-      console.log(`[Server] 배팅 완료: ${game.player1.currentBet}G vs ${game.player2.currentBet}G`);
+      console.log(`[Server] betting:complete 전송 → 플레이어1: ${game.player1.currentBet}G, 플레이어2: ${game.player2.currentBet}G`);
 
       // 턴 타이머 시작
       startTurnTimer(gameId);
@@ -238,6 +239,7 @@ io.on('connection', (socket) => {
       // 상대 차례로 전환
       game.currentBetter = playerNum === 1 ? 2 : 1;
       socket.emit('bet:confirmed', { betAmount });
+      console.log(`[Server] bet:confirmed 전송 → ${socket.id}: ${betAmount}G, 다음 차례: 플레이어${game.currentBetter}`);
     }
   });
 
