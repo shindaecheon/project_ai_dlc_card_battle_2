@@ -46,8 +46,16 @@ function getLocalIP() {
  * @param {string} gameId - 게임 ID
  */
 function startTurnTimer(gameId) {
+  console.log(`[Server] startTurnTimer 호출 - gameId: ${gameId}`);
   const game = gameManager.getGame(gameId);
-  if (!game || game.status !== 'playing') return;
+  if (!game) {
+    console.log(`[Server] startTurnTimer - 게임을 찾을 수 없음: ${gameId}`);
+    return;
+  }
+  if (game.status !== 'playing') {
+    console.log(`[Server] startTurnTimer - 게임 상태가 playing이 아님: ${game.status}`);
+    return;
+  }
 
   // 이전 타이머가 있으면 먼저 정리
   if (game.turnTimer) {
@@ -55,6 +63,7 @@ function startTurnTimer(gameId) {
     console.log(`[Server] 이전 타이머 정리: ${gameId}`);
   }
 
+  console.log(`[Server] 새 타이머 시작: ${gameId}`);
   let remainingTime = 30;
 
   const timer = setInterval(() => {
@@ -134,6 +143,7 @@ function sendBattleResult(gameId, result) {
 
   // 게임 종료 확인
   if (result.gameEnded) {
+    console.log(`[Server] 게임 종료 감지: ${gameId}`);
     // 플레이어 1에게 게임 종료 알림
     io.to(game.player1.socketId).emit('game:end', {
       winner: result.finalWinner,
@@ -150,6 +160,7 @@ function sendBattleResult(gameId, result) {
 
     gameManager.deleteGame(gameId);
   } else {
+    console.log(`[Server] 게임 계속 진행 → 타이머 시작: ${gameId}`);
     // 다음 턴 타이머 시작
     startTurnTimer(gameId);
   }
