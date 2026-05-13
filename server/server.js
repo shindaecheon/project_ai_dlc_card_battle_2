@@ -49,6 +49,12 @@ function startTurnTimer(gameId) {
   const game = gameManager.getGame(gameId);
   if (!game || game.status !== 'playing') return;
 
+  // 이전 타이머가 있으면 먼저 정리
+  if (game.turnTimer) {
+    clearInterval(game.turnTimer);
+    console.log(`[Server] 이전 타이머 정리: ${gameId}`);
+  }
+
   let remainingTime = 30;
 
   const timer = setInterval(() => {
