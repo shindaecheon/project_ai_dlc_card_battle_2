@@ -77,6 +77,65 @@
             color: #333;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .battle-card.appear {
+            animation: cardAppear 0.5s ease-out;
+        }
+
+        .battle-card.winner {
+            animation: cardWin 0.6s ease-in-out;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.8);
+        }
+
+        .battle-card.loser {
+            animation: cardLose 0.6s ease-in-out;
+            opacity: 0.6;
+        }
+
+        @keyframes cardAppear {
+            0% {
+                transform: scale(0.3) translateY(-50px);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1.1) translateY(0);
+            }
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes cardWin {
+            0%, 100% {
+                transform: scale(1) rotate(0deg);
+            }
+            25% {
+                transform: scale(1.15) rotate(-5deg);
+            }
+            50% {
+                transform: scale(1.15) rotate(5deg);
+            }
+            75% {
+                transform: scale(1.15) rotate(-5deg);
+            }
+        }
+
+        @keyframes cardLose {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            25% {
+                transform: translateY(-10px);
+            }
+            50% {
+                transform: translateY(0);
+            }
+            75% {
+                transform: translateY(-5px);
+            }
         }
 
         .battle-card.red { color: #d32f2f; }
@@ -393,9 +452,17 @@
             aiBattle.innerHTML = '?';
         }
 
-        function renderBattleCard(element, card) {
+        function renderBattleCard(element, card, isWinner = null) {
             const colorClass = SUIT_COLORS[card.suit];
-            element.className = `battle-card ${colorClass}`;
+            let className = `battle-card ${colorClass} appear`;
+
+            if (isWinner === true) {
+                className += ' winner';
+            } else if (isWinner === false) {
+                className += ' loser';
+            }
+
+            element.className = className;
             element.innerHTML = `
                 <span class="suit-top">${card.suit}</span>
                 ${card.rank}
@@ -411,32 +478,55 @@
             const aiIndex = chooseAiCard(playerCard);
             const aiCard = aiHand.splice(aiIndex, 1)[0];
 
-            renderBattleCard(document.getElementById('player-battle-card'), playerCard);
-            renderBattleCard(document.getElementById('ai-battle-card'), aiCard);
-
+            const playerBattleEl = document.getElementById('player-battle-card');
+            const aiBattleEl = document.getElementById('ai-battle-card');
             const resultEl = document.getElementById('result-message');
 
-            if (playerCard.value > aiCard.value) {
-                aiHp--;
-                resultEl.textContent = `승리! AI가 HP를 1 잃었습니다.`;
-                resultEl.className = 'result-message win';
-            } else if (playerCard.value < aiCard.value) {
-                playerHp--;
-                resultEl.textContent = `패배! HP를 1 잃었습니다.`;
-                resultEl.className = 'result-message lose';
-            } else {
-                resultEl.textContent = `무승부! 피해 없음.`;
-                resultEl.className = 'result-message draw';
-            }
+            // 플레이어 카드 먼저 표시
+            renderBattleCard(playerBattleEl, playerCard);
 
-            turn++;
-            updateUI();
+            // 0.3초 후 AI 카드 표시
+            setTimeout(() => {
+                renderBattleCard(aiBattleEl, aiCard);
 
-            if (playerHp <= 0 || aiHp <= 0 || playerHand.length === 0) {
-                setTimeout(endGame, 1200);
-            } else {
-                setTimeout(() => { isPlaying = true; renderPlayerHand(); }, 1000);
-            }
+                // 0.5초 후 승패 판정 및 애니메이션
+                setTimeout(() => {
+                    let playerWon = false;
+                    let aiWon = false;
+
+                    if (playerCard.value > aiCard.value) {
+                        aiHp--;
+                        resultEl.textContent = `승리! AI가 HP를 1 잃었습니다.`;
+                        resultEl.className = 'result-message win';
+                        playerWon = true;
+                    } else if (playerCard.value < aiCard.value) {
+                        playerHp--;
+                        resultEl.textContent = `패배! HP를 1 잃었습니다.`;
+                        resultEl.className = 'result-message lose';
+                        aiWon = true;
+                    } else {
+                        resultEl.textContent = `무승부! 피해 없음.`;
+                        resultEl.className = 'result-message draw';
+                    }
+
+                    // 승패 애니메이션 추가
+                    renderBattleCard(playerBattleEl, playerCard, playerWon ? true : (aiWon ? false : null));
+                    renderBattleCard(aiBattleEl, aiCard, aiWon ? true : (playerWon ? false : null));
+
+                    turn++;
+                    updateUI();
+
+                    if (playerHp <= 0 || aiHp <= 0 || playerHand.length === 0) {
+                        setTimeout(endGame, 1500);
+                    } else {
+                        setTimeout(() => {
+                            isPlaying = true;
+                            renderPlayerHand();
+                            clearBattle();
+                        }, 1500);
+                    }
+                }, 500);
+            }, 300);
         }
 
         function chooseAiCard(playerCard) {
